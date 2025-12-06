@@ -2,10 +2,15 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useParams } from "next/navigation";
-import { PuzzleMetadata, PuzzleSolutionHandler, PuzzleSolutionMetadata } from "../../../lib/types";
+import {
+  PuzzleMetadata,
+  PuzzleSolutionHandler,
+  PuzzleSolutionMetadata,
+} from "../../../lib/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import Link from "next/link";
 
 const puzzles: { [key: number]: PuzzleMetadata[] } = {
   1: await require("@/puzzles/day-01").default,
@@ -15,15 +20,21 @@ interface PageProps {
   params: { id: string };
 }
 
-const SolutionArea = ({ defaultValue, solutionHandler }: { defaultValue: string, solutionHandler: PuzzleSolutionHandler }) => {
+const SolutionArea = ({
+  defaultValue,
+  solutionHandler,
+}: {
+  defaultValue: string;
+  solutionHandler: PuzzleSolutionHandler;
+}) => {
   const [userAnswer, setUserAnswer] = useState(defaultValue);
   const [answer, setAnswer] = useState<PuzzleSolutionMetadata>();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const onUserSubmit = () => {
     try {
-      setError('');
+      setError("");
       setAnswer(solutionHandler(userAnswer));
-    } catch(e: any) {
+    } catch (e: any) {
       setError(e.toString());
     }
   };
@@ -36,14 +47,26 @@ const SolutionArea = ({ defaultValue, solutionHandler }: { defaultValue: string,
         defaultValue={defaultValue}
       />
       <Button onClick={(e) => onUserSubmit()}>Run</Button>
-      { answer && 
+      {answer && (
         <div>
-          <div>Your solution is <span className="text-lg font-bold">{ answer.result }</span></div>
-          { answer.benchmark !== undefined && answer.benchmark >= 0 && <div> <span className="text-lg font-bold">The solution took { answer.benchmark }ms</span></div> }
-          <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black">{answer.messages?.join('\n')}</pre>
+          <div>
+            Your solution is{" "}
+            <span className="text-lg font-bold">{answer.result}</span>
+          </div>
+          {answer.benchmark !== undefined && answer.benchmark >= 0 && (
+            <div>
+              {" "}
+              <span className="text-lg font-bold">
+                The solution took {answer.benchmark}ms
+              </span>
+            </div>
+          )}
+          <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black">
+            {answer.messages?.join("\n")}
+          </pre>
         </div>
-      }
-      { error && <div className="text-lg font-bold text-red-900">{ error }</div>}
+      )}
+      {error && <div className="text-lg font-bold text-red-900">{error}</div>}
     </div>
   );
 };
@@ -75,11 +98,19 @@ export default function DayPage() {
                   <h2 className="scroll-m-20 border-b pb-2 mb-4 text-xl font-semibold tracking-tight first:mt-0">
                     Part {index + 1}
                   </h2>
+                  <Button className="mb-8" asChild>
+                    <Link target="_blank" href={puzzle.srcUrl}>
+                      Puzzle Link
+                    </Link>
+                  </Button>
                   <pre className="text-sm px-4 py-2 pb-4 border-2 border-slate-300 max-h-[50vh] block w-full overflow-scroll whitespace-break-spaces">
                     {puzzle.prompt.trim()}
                   </pre>
 
-                  <SolutionArea defaultValue={puzzle.sampleInput} solutionHandler={puzzle.solution} />
+                  <SolutionArea
+                    defaultValue={puzzle.sampleInput}
+                    solutionHandler={puzzle.solution}
+                  />
                 </div>
               </TabsContent>
             ))}
