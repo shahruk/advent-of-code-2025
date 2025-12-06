@@ -1,7 +1,9 @@
-import type { PuzzleMetadata } from "@/app/day/[id]/types";
+import type { PuzzleMetadata } from "@/lib/types";
+import { partOne } from "./solution";
 const metadata: PuzzleMetadata[] = [
   {
     srcUrl: `https://adventofcode.com/2025/day/1`,
+    solution: partOne,
     prompt: `
 --- Day 1: Secret Entrance ---
 The Elves have good news and bad news.
@@ -72,9 +74,9 @@ L99
 R14
 L82`,
   },
-
   {
     srcUrl: `https://adventofcode.com/2025/day/1#part2`,
+    solution: () => {},
     prompt: `--- Part Two ---
 You're sure that's the right password, but the door won't open. You knock, but nobody answers. You build a snowman while you think.
 
