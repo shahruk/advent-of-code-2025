@@ -40,6 +40,7 @@ const SolutionArea = ({ defaultValue, solutionHandler }: { defaultValue: string,
     <div className="mt-8 grid w-full gap-3">
       <Label className="text-md">Your puzzle</Label>
       <Textarea
+        className="max-h-[50vh]"
         onChange={(e) => setUserAnswer(e.target.value)}
         defaultValue={defaultValue}
       />
@@ -47,7 +48,7 @@ const SolutionArea = ({ defaultValue, solutionHandler }: { defaultValue: string,
       { answer && 
         <div>
           <div>Your solution is <span className="text-lg font-bold">{ answer.result }</span></div>
-          { answer.messages && <pre>{ answer.messages.map(message => message) }</pre>}
+          <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black">{answer.messages?.join('\n')}</pre>
           { answer.benchmark && <div> <span className="text-lg font-bold">{ answer.benchmark }</span></div> }
         </div>
       }

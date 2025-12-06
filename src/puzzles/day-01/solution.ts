@@ -25,13 +25,14 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
   let result = 0;
   let messages = [];
   let benchmark = performance.now();
+  messages.push(`The dial starts by pointing at ${currentDialPosition}.`)
   contents.forEach(movement => {
     currentDialPosition = calculateMovementFromPosition(
       currentDialPosition,
       movement
     );
+    messages.push(`The dial is rotated ${movement} to point at ${currentDialPosition}.`)
     if (currentDialPosition === 0) result++;
   });
-  messages.push(`The dial points at 0 a total of ${result} times.`);
   return { result, messages, benchmark: `This test took ${performance.now() - benchmark} ms`};
 };
