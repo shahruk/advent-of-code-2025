@@ -1,5 +1,17 @@
 import type { PuzzleMetadata } from "@/lib/types";
-import { partOne } from "./solution";
+import { partOne, partTwo } from "./solution";
+
+export const sampleInput = `L68
+L30
+R48
+L5
+R60
+L55
+L1
+L99
+R14
+L82`;
+
 const metadata: PuzzleMetadata[] = [
   {
     srcUrl: `https://adventofcode.com/2025/day/1`,
@@ -63,20 +75,12 @@ Because the dial points at 0 a total of three times during this process, the pas
 
 Analyze the rotations in your attached document. What's the actual password to open the door?
 `,
-    sampleInput: `L68
-L30
-R48
-L5
-R60
-L55
-L1
-L99
-R14
-L82`,
+    sampleInput 
   },
   {
     srcUrl: `https://adventofcode.com/2025/day/1#part2`,
-    solution: () => {},
+    solution: partTwo,
+    sampleInput,
     prompt: `--- Part Two ---
 You're sure that's the right password, but the door won't open. You knock, but nobody answers. You build a snowman while you think.
 

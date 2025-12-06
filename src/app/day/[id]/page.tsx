@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { PuzzleMetadata, PuzzleSolutionHandler, PuzzleSolutionMetadata } from "../../../lib/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 const puzzles: { [key: number]: PuzzleMetadata[] } = {
   1: await require("@/puzzles/day-01").default,
@@ -14,15 +14,6 @@ const puzzles: { [key: number]: PuzzleMetadata[] } = {
 interface PageProps {
   params: { id: string };
 }
-/*
-<div className="mt-8 grid w-full gap-3">
-                    <Label className="text-md" htmlFor="answer">
-                      Your puzzle input
-                    </Label>
-                    <Textarea onChange={(e) => handleInputChange(index, e.target.value)} defaultValue={puzzle.sampleInput} id="answer" />
-                    <Button onClick={e => puzzle.solution()}>Run</Button>
-                  </div>
-                  */
 
 const SolutionArea = ({ defaultValue, solutionHandler }: { defaultValue: string, solutionHandler: PuzzleSolutionHandler }) => {
   const [userAnswer, setUserAnswer] = useState(defaultValue);
@@ -48,8 +39,8 @@ const SolutionArea = ({ defaultValue, solutionHandler }: { defaultValue: string,
       { answer && 
         <div>
           <div>Your solution is <span className="text-lg font-bold">{ answer.result }</span></div>
+          { answer.benchmark !== undefined && answer.benchmark >= 0 && <div> <span className="text-lg font-bold">The solution took { answer.benchmark }ms</span></div> }
           <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black">{answer.messages?.join('\n')}</pre>
-          { answer.benchmark && <div> <span className="text-lg font-bold">{ answer.benchmark }</span></div> }
         </div>
       }
       { error && <div className="text-lg font-bold text-red-900">{ error }</div>}

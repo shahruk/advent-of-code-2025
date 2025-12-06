@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a NextJS project showing the results to Advent of Code 2025. It allows you to run the sample input or your own input and get the correct results.
 
 ## Getting Started
 
@@ -16,21 +16,19 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Adding Puzzles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To add a puzzle, create a new folder in the puzzles directory. It should contain:
 
-## Learn More
+```
+index.ts            | Provides the metadata such as puzzle prompt, solution function handler, and sample input data for display.
+solution.ts         | Has the puzzle solution
+solution.test.ts    | Tests for the solution
+```
 
-To learn more about Next.js, take a look at the following resources:
+Then add the puzzle into `src/app/day/[id]/page.tsx`. The solution function should ideally return results, messages, and benchmark as object keys.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+results       | A simple string representing the answer to put into Advent of Code
+messages      | An array of string messages that log the logic flow
+benchmarks    | A performance.now() measurement for the entirety of the solution

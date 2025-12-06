@@ -7,7 +7,7 @@ export type PuzzleMetadata = {
 export type PuzzleSolutionMetadata = {
   result: string | number,
   messages?: string[],
-  benchmark?: string
+  benchmark?: number
 }
 
 export type PuzzleSolutionHandler = {
