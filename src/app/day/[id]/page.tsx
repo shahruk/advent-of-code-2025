@@ -16,10 +16,6 @@ const puzzles: { [key: number]: PuzzleMetadata[] } = {
   1: await require("@/puzzles/day-01").default,
 };
 
-interface PageProps {
-  params: { id: string };
-}
-
 const SolutionArea = ({
   defaultValue,
   solutionHandler,
@@ -34,8 +30,13 @@ const SolutionArea = ({
     try {
       setError("");
       setAnswer(solutionHandler(userAnswer));
-    } catch (e: any) {
-      setError(e.toString());
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.toString());
+      } else {
+        setError('An unknown error occured that could not be transcribed.');
+        console.error(e);
+      }
     }
   };
   return (
@@ -46,7 +47,7 @@ const SolutionArea = ({
         onChange={(e) => setUserAnswer(e.target.value)}
         defaultValue={defaultValue}
       />
-      <Button onClick={(e) => onUserSubmit()}>Run</Button>
+      <Button onClick={() => onUserSubmit()}>Run</Button>
       {answer && (
         <div>
           <div>

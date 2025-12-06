@@ -2,7 +2,7 @@ import { PuzzleSolutionMetadata } from "@/lib/types";
 import { splitUserInputByLine } from "@/lib/utils";
 
 export const calculateNumericalRotation = (movementString: string): number => {
-  let negativeOrPositiveMultiplier =
+  const negativeOrPositiveMultiplier =
     movementString.substring(0, 1) === "L" ? -1 : 1;
   return negativeOrPositiveMultiplier * parseInt(movementString.substring(1));
 };
@@ -19,7 +19,7 @@ export const calculateNewPositionWithRotation = (
 
 export const calculateFullRotationCount = (position: number, movement: number): number => {
   let result = Math.floor(Math.abs(movement) / 100);
-  let remainder = Math.abs(movement) % 100;
+  const remainder = Math.abs(movement) % 100;
   if (position === 0) return result;
 
   // Determine if the remainder and direction cross 0
@@ -35,11 +35,11 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
   const contents = splitUserInputByLine(userInput);
   let currentDialPosition = 50;
   let result = 0;
-  let messages = [];
-  let benchmark = performance.now();
+  const messages = [];
+  const benchmark = performance.now();
   messages.push(`The dial starts by pointing at ${currentDialPosition}.`)
   contents.forEach(line => {
-    let movement = calculateNumericalRotation(line);
+    const movement = calculateNumericalRotation(line);
     currentDialPosition = calculateNewPositionWithRotation(
       currentDialPosition,
       movement
@@ -54,12 +54,12 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   const contents = splitUserInputByLine(userInput);
   let currentDialPosition = 50;
   let result = 0;
-  let messages = [];
-  let benchmark = performance.now();
+  const messages = [];
+  const benchmark = performance.now();
   messages.push(`The dial starts by pointing at ${currentDialPosition}.`);
   contents.forEach(line => {
-    let movement = calculateNumericalRotation(line);
-    let rotationCount = calculateFullRotationCount(
+    const movement = calculateNumericalRotation(line);
+    const rotationCount = calculateFullRotationCount(
       currentDialPosition,
       movement
     );

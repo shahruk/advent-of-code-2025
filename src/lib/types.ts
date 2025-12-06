@@ -1,7 +1,7 @@
 export type PuzzleMetadata = {
   srcUrl: string;
   prompt: string;
-  solution: Function;
+  solution: (input: string) => PuzzleSolutionMetadata;
   sampleInput?: string
 };
 export type PuzzleSolutionMetadata = {
