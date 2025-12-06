@@ -2,7 +2,7 @@ export type PuzzleMetadata = {
   srcUrl: string;
   prompt: string;
   solution: (input: string) => PuzzleSolutionMetadata;
-  sampleInput?: string;
+  sampleInput: string;
 };
 export type PuzzleSolutionMetadata = {
   result: string | number;
