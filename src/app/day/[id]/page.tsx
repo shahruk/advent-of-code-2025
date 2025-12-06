@@ -34,7 +34,7 @@ const SolutionArea = ({
       if (e instanceof Error) {
         setError(e.toString());
       } else {
-        setError('An unknown error occured that could not be transcribed.');
+        setError("An unknown error occured that could not be transcribed.");
         console.error(e);
       }
     }

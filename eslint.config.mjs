@@ -9,7 +9,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-require-imports": "off",
-    }
+    },
   },
   globalIgnores([
     // Default ignores of eslint-config-next:
