@@ -1,24 +1,19 @@
-import {
-  PuzzleMetadata,
-} from "../../../lib/types";
+import { PuzzleMetadata } from "../../../lib/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { SolutionArea } from "@/components/solution-area";
-
 
 const puzzles: { [key: number]: PuzzleMetadata[] } = {
   1: await require("@/puzzles/day-01").default,
 };
 
 export const generateStaticParams = async () => {
-  const allIds = Object.keys(puzzles).map(id => ({ id }));
-  console.log('====', allIds);
+  const allIds = Object.keys(puzzles).map((id) => ({ id }));
   return allIds;
 };
 
-
-export default function DayPage({ params  }: { params: { id: string }}) {
+export default function DayPage({ params }: { params: { id: string } }) {
   const puzzleData = puzzles[parseInt(params.id as string)];
 
   return (
