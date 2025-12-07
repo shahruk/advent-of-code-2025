@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
     <div className="flex w-full min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -9,7 +7,7 @@ export default function Home() {
             Welcome to Advent of Code 2025
           </h1>
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            This application lets you try this year's challenges.
+            {`This application lets you try this year's challenges.`}
           </p>
         </div>
       </main>

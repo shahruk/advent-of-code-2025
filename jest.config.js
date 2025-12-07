@@ -1,11 +1,11 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} **/
 module.exports = {
-  roots: ['<rootDir>/src'],
-  preset: 'ts-jest',
+  roots: ["<rootDir>/src"],
+  preset: "ts-jest",
   testEnvironment: "node",
   collectCoverage: true,
-  coverageDirectory: 'coverage',
-  testPathIgnorePatterns: ['/node_modules/'],
+  coverageDirectory: "coverage",
+  testPathIgnorePatterns: ["/node_modules/"],
   verbose: true,
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
@@ -18,7 +18,6 @@ module.exports = {
     },
   },
   transform: {
-    "^.+\\.(ts|tsx)?$": ["ts-jest",{}],
+    "^.+\\.(ts|tsx)?$": ["ts-jest", {}],
   },
 };
-

@@ -32,3 +32,4 @@ Then add the puzzle into `src/app/day/[id]/page.tsx`. The solution function shou
 results       | A simple string representing the answer to put into Advent of Code
 messages      | An array of string messages that log the logic flow
 benchmarks    | A performance.now() measurement for the entirety of the solution
+```

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,14 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased`}
-      >
+      <body className={`antialiased`}>
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset className="min-w-0">
-            {children}
-          </SidebarInset>
+          <SidebarInset className="min-w-0">{children}</SidebarInset>
         </SidebarProvider>
       </body>
     </html>
