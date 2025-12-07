@@ -34,5 +34,6 @@ jobs:
           key: ${{ secrets.SFTP_KEY }}
           port: ${{ secrets.SFTP_PORT }}
           passphrase: ${{ secrets.SFTP_KEY_PASSPHRASE }}
+          debug: true
           source: "out/*"
           target: "/home/customer/www/adventofcode2025.shahruk.com/public_html"
