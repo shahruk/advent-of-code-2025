@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js static site
+      - name: Build React app
         run: npm run build
         env:
           NEXT_PUBLIC_ENV: production
@@ -35,6 +35,6 @@ jobs:
           key: ${{ secrets.SFTP_KEY }}
           port: ${{ secrets.SFTP_PORT }}
           passphrase: ${{ secrets.SFTP_KEY_PASSPHRASE }}
-          source: "out/*"
+          source: "build/client/*"
           target: "/home/customer/www/adventofcode2025.shahruk.com/public_html"
-          strip_components: 1
+          strip_components: 2
