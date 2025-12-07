@@ -7,6 +7,7 @@ jobs:
   deploy:
     name: Build and Deploy to Production
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,7 +27,7 @@ jobs:
           NEXT_PUBLIC_ENV: production
 
       - name: Upload via SFTP to SiteGround
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SFTP_HOST }}
           username: ${{ secrets.SFTP_USER }}
@@ -36,3 +37,4 @@ jobs:
           source: "build/client/*"
           strip_slashes: 2
           target: "/home/customer/www/adventofcode2025.shahruk.com/public_html"
+          strip_components: 1
