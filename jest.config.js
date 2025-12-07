@@ -1,6 +1,6 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} **/
 module.exports = {
-  roots: ["<rootDir>/src"],
+  roots: ["<rootDir>/app"],
   preset: "ts-jest",
   testEnvironment: "node",
   collectCoverage: true,
@@ -8,7 +8,7 @@ module.exports = {
   testPathIgnorePatterns: ["/node_modules/"],
   verbose: true,
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/src/$1",
+    "^~/(.*)$": "<rootDir>/app/$1",
   },
   coverageThreshold: {
     global: {

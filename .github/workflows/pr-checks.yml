@@ -60,5 +60,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js app
+      - name: Build app
         run: npm run build

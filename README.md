@@ -1,35 +1,87 @@
-This is a NextJS project showing the results to Advent of Code 2025. It allows you to run the sample input or your own input and get the correct results.
+# Welcome to React Router!
+
+A modern, production-ready template for building full-stack React applications using React Router.
+
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+
+## Features
+
+- 🚀 Server-side rendering
+- ⚡️ Hot Module Replacement (HMR)
+- 📦 Asset bundling and optimization
+- 🔄 Data loading and mutations
+- 🔒 TypeScript by default
+- 🎉 TailwindCSS for styling
+- 📖 [React Router docs](https://reactrouter.com/)
 
 ## Getting Started
 
-First, run the development server:
+### Installation
+
+Install the dependencies:
+
+```bash
+npm install
+```
+
+### Development
+
+Start the development server with HMR:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Your application will be available at `http://localhost:5173`.
 
-## Adding Puzzles
+## Building for Production
 
-To add a puzzle, create a new folder in the puzzles directory. It should contain:
+Create a production build:
 
-```
-index.ts            | Provides the metadata such as puzzle prompt, solution function handler, and sample input data for display.
-solution.ts         | Has the puzzle solution
-solution.test.ts    | Tests for the solution
+```bash
+npm run build
 ```
 
-Then add the puzzle into `src/app/day/[id]/page.tsx`. The solution function should ideally return results, messages, and benchmark as object keys.
+## Deployment
+
+### Docker Deployment
+
+To build and run using Docker:
+
+```bash
+docker build -t my-app .
+
+# Run the container
+docker run -p 3000:3000 my-app
+```
+
+The containerized application can be deployed to any platform that supports Docker, including:
+
+- AWS ECS
+- Google Cloud Run
+- Azure Container Apps
+- Digital Ocean App Platform
+- Fly.io
+- Railway
+
+### DIY Deployment
+
+If you're familiar with deploying Node applications, the built-in app server is production-ready.
+
+Make sure to deploy the output of `npm run build`
 
 ```
-results       | A simple string representing the answer to put into Advent of Code
-messages      | An array of string messages that log the logic flow
-benchmarks    | A performance.now() measurement for the entirety of the solution
+├── package.json
+├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
+├── build/
+│   ├── client/    # Static assets
+│   └── server/    # Server-side code
 ```
+
+## Styling
+
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+
+---
+
+Built with ❤️ using React Router.
