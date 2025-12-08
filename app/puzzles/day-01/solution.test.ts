@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import {
   calculateFullRotationCount,
   calculateNumericalRotation,
@@ -8,7 +8,7 @@ import {
 } from "./solution";
 import metadata from ".";
 
-describe("Advent of Code - 2025", () => {
+describe("Day one", () => {
   describe("calculateNumericalRotation", () => {
     it("should correctly return the value from a movement string", () => {
       expect(calculateNumericalRotation("L28")).toEqual(-28);
@@ -38,13 +38,13 @@ describe("Advent of Code - 2025", () => {
     });
   });
 
-  describe("Day 1", () => {
+  describe("Part 1", () => {
     it("Returns the correct position for the sample data", () => {
       expect(partOne(metadata[0].sampleInput as string).result).toEqual(3);
     });
   });
 
-  describe("Day 2", () => {
+  describe("Part 2", () => {
     it("Returns the correct rotations for the sample data", () => {
       expect(partTwo(metadata[0].sampleInput as string).result).toEqual(6);
       expect(partTwo(`R1000`).result).toEqual(10);

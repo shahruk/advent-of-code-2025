@@ -1,5 +1,5 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
-import { splitUserInputByLine } from "~/lib/utils";
+import { splitUserInputByCharacter } from "~/lib/utils";
 
 export const calculateNumericalRotation = (movementString: string): number => {
   const negativeOrPositiveMultiplier =
@@ -35,10 +35,10 @@ export const calculateFullRotationCount = (
 };
 
 export const partOne = (userInput: string): PuzzleSolutionMetadata => {
-  const contents = splitUserInputByLine(userInput);
+  const contents = splitUserInputByCharacter(userInput);
   let currentDialPosition = 50;
   let result = 0;
-  const messages = [];
+  const messages: string[] = [];
   const benchmark = performance.now();
   messages.push(`The dial starts by pointing at ${currentDialPosition}.`);
   contents.forEach((line) => {
@@ -56,10 +56,10 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
 };
 
 export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
-  const contents = splitUserInputByLine(userInput);
+  const contents = splitUserInputByCharacter(userInput);
   let currentDialPosition = 50;
   let result = 0;
-  const messages = [];
+  const messages: string[] = [];
   const benchmark = performance.now();
   messages.push(`The dial starts by pointing at ${currentDialPosition}.`);
   contents.forEach((line) => {
