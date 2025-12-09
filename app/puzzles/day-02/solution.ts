@@ -27,6 +27,31 @@ export const findInvalidId = (inputs: string): number[] => {
   return result;
 };
 
+export const findInvalidIdWithMultiples = (inputs: string): number[] => {
+  let result: number[] = [];
+  let stringPair = splitPair(inputs);
+  let firstNum = parseFloat(stringPair[0]);
+  let lastNum = parseFloat(stringPair[1]);
+  for(let i = firstNum; i <= lastNum; i++) {
+    let numberString = i.toString();
+    for(let j = 1; j <= numberString.length; j++) {
+      // If the number of digits is cleanly divisible lets check if it's repeating
+      if (numberString.length % j === 0) {
+        let isRepeatingSequence = false;
+        let strings = [];
+        for(let k = 0; k < numberString.length; k += j) {
+          strings.push(numberString.substring(k, k + j));
+        }
+        if (strings.length > 1 && strings.filter(str => str === strings[0]).length === strings.length) {
+          isRepeatingSequence = true;
+        }
+        if (isRepeatingSequence && !result.includes(i)) result.push(i);
+      }
+    }
+  }
+  return result;
+};
+
 export const partOne = (userInput: string): PuzzleSolutionMetadata => {
   const contents = splitUserInputByCharacter(userInput, ',');
   let result = 0;
@@ -45,11 +70,18 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
 };
 
 export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
-  const contents = splitUserInputByCharacter(userInput);
+    const contents = splitUserInputByCharacter(userInput, ',');
   let result = 0;
   const messages: string[] = [];
   const benchmark = performance.now();
-  contents.forEach((line) => {
+  contents.forEach(pair => {
+    let invalids = findInvalidIdWithMultiples(pair);
+    if (invalids.length) {
+      result += invalids.reduce((acc, val) => acc + val, 0);
+      messages.push(`${pair} has ${invalids.length} invalid IDs, ${invalids.join(' and ')}.`);
+    } else {
+      messages.push(`${pair} contains no invalid IDs.`);
+    }
   });
   return { result, messages, benchmark: performance.now() - benchmark };
 };
