@@ -2,12 +2,8 @@ import { useParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { SolutionArea } from "~/components/solution-area";
-import day01Puzzles from "~/puzzles/day-01";
-import type { PuzzleMetadata } from "~/lib/types";
+import { puzzles } from "~/puzzles";
 
-const puzzles: { [key: number]: PuzzleMetadata[] } = {
-  1: day01Puzzles,
-};
 
 export default function PuzzleDayPage() {
   const { id } = useParams<{ id: string }>();
