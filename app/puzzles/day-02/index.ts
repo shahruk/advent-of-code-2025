@@ -23,7 +23,7 @@ We are asked to find the invalid IDs by taking a range of numbers and finding th
 We are asked to find the invalid IDs this time by looking for any repeating sequence of numbers.
 
 To solve this, we will loop through the length of the digits as a string to find the cleanly divisible factors and determine if substrings of that amount are repeating.
-`
+`,
   },
 ];
 

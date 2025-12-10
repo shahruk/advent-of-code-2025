@@ -16,7 +16,7 @@ const metadata: PuzzleMetadata[] = [
     srcUrl: `https://adventofcode.com/2025/day/X#part2`,
     solution: partTwo,
     sampleInput,
-    prompt: `--- Part Two ---`
+    prompt: `--- Part Two ---`,
   },
 ];
 
