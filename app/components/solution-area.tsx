@@ -31,7 +31,7 @@ export const SolutionArea = ({
     }
   };
   return (
-    <div className="mt-8 grid w-full gap-3">
+    <div className="mt-2 grid w-full gap-3">
       <Label className="text-md">Your puzzle</Label>
       <Textarea
         className="max-h-[50vh]"

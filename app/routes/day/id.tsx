@@ -22,26 +22,26 @@ export default function PuzzleDayPage() {
             <TabsList>
               {puzzleData.map((_puzzle, index) => (
                 <TabsTrigger key={index + 1} value={(index + 1).toString()}>
-                  Day {index + 1}
+                  Part {index + 1}
                 </TabsTrigger>
               ))}
             </TabsList>
             {puzzleData.map((puzzle, index) => (
               <TabsContent key={index + 1} value={(index + 1).toString()}>
-                <div className="mb-6 px-4">
+                <div className="flex flex-col w-full justify-between align-top ">
+                  <pre className="text-sm px-4 py-2 pb-4 border-2 border-slate-300 max-h-[50vh] block w-full overflow-scroll whitespace-break-spaces">
                   <h2 className="scroll-m-20 border-b pb-2 mb-4 text-xl font-semibold tracking-tight first:mt-0">
                     Part {index + 1}
                   </h2>
-                  <Button className="mb-8" asChild>
-                    <a
-                      target="_blank"
-                      href={puzzle.srcUrl}
-                      rel="noopener noreferrer"
-                    >
-                      Puzzle Link
-                    </a>
-                  </Button>
-                  <pre className="text-sm px-4 py-2 pb-4 border-2 border-slate-300 max-h-[50vh] block w-full overflow-scroll whitespace-break-spaces">
+<div className="mb-4"><Button asChild>
+                      <a
+                        target="_blank"
+                        href={puzzle.srcUrl}
+                        rel="noopener noreferrer"
+                      >
+                        Puzzle Link
+                      </a>
+                    </Button></div>
                     {puzzle.prompt.trim()}
                   </pre>
 
