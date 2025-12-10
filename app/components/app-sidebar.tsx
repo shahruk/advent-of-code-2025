@@ -11,14 +11,16 @@ import {
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
 import { Link } from "react-router";
+import { puzzles } from "~/puzzles";
 
 // Menu items.
-const items = [
-  {
-    title: "Day 1",
-    url: "/day/1",
-  },
-];
+const items: { title: string, url: string }[]= [];
+Object.keys(puzzles).map(day => {
+items.push({
+  title: `Day ${day}`,
+  url: `/day/${day}`
+});
+});
 
 export function AppSidebar() {
   return (

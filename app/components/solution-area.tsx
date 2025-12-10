@@ -31,7 +31,7 @@ export const SolutionArea = ({
     }
   };
   return (
-    <div className="mt-8 grid w-full gap-3">
+    <div className="mt-2 grid w-full gap-3">
       <Label className="text-md">Your puzzle</Label>
       <Textarea
         className="max-h-[50vh]"
@@ -53,7 +53,7 @@ export const SolutionArea = ({
               </span>
             </div>
           )}
-          <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black">
+          <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black whitespace-break-spaces">
             {answer.messages?.join("\n")}
           </pre>
         </div>
