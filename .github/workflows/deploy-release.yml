@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.SFTP_USER }}
           key: ${{ secrets.SFTP_KEY }}
           port: ${{ secrets.SFTP_PORT }}
-          passphrase: ${{ secrets.SFTP_KEY_PASSPHRASE }}
+          # passphrase: ${{ secrets.SFTP_KEY_PASSPHRASE }}
           source: "build/client/*"
-          strip_slashes: 2
+          strip_components: 2
           target: "/home/customer/www/adventofcode2025.shahruk.com/public_html"
