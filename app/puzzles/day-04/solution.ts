@@ -52,11 +52,11 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   const benchmark = performance.now();
   let contents = splitUserInputByCharacter(userInput);
   let shouldLoop = true;
-  
+
   messages.push(`Initial state:\n`);
-  messages.push(contents.join('\n'));
-  messages.push('\n');
-  
+  messages.push(contents.join("\n"));
+  messages.push("\n");
+
   while (shouldLoop) {
     let futureContents: string[] = [];
     let positionsMoved = 0;
@@ -66,15 +66,21 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
       userMessageContents[index] = line;
       futureContents[index] = line;
       positionsMoved += markedResults.length;
-      markedResults.forEach(column => {
-        futureContents[index] = futureContents[index].substring(0, column) + '.' + futureContents[index].substring(column + 1);
-        userMessageContents[index] = userMessageContents[index].substring(0, column) + 'x' + userMessageContents[index].substring(column + 1);
+      markedResults.forEach((column) => {
+        futureContents[index] =
+          futureContents[index].substring(0, column) +
+          "." +
+          futureContents[index].substring(column + 1);
+        userMessageContents[index] =
+          userMessageContents[index].substring(0, column) +
+          "x" +
+          userMessageContents[index].substring(column + 1);
       });
     });
 
     messages.push(`Remove ${positionsMoved} rolls of paper:`);
-    messages.push(userMessageContents.join('\n'));
-    messages.push('\n');
+    messages.push(userMessageContents.join("\n"));
+    messages.push("\n");
     result += positionsMoved;
     if (positionsMoved === 0) shouldLoop = false;
     contents = futureContents;
