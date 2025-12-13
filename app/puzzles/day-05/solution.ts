@@ -87,11 +87,6 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
 export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   const [ranges, _ingredients] = parsePuzzleInput(userInput);
   let result = 0;
-  console.log(
-    "my ranges",
-    ranges.sort((a, b) => a[0] - b[0]),
-    ranges.length
-  );
   const messages: string[] = [];
   const benchmark = performance.now();
   ranges.forEach((range) => {

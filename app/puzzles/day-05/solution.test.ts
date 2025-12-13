@@ -20,11 +20,11 @@ describe("Advent of Code - Day 5", () => {
     });
   });
 
-  describe.only("isOverlappingRange", () => {
+  describe("isOverlappingRange", () => {
     it("returns the correct value", () => {
       expect(isOverlappingRange([1, 5], [5, 10])).toEqual(true);
-      // expect(isOverlappingRange([3,5], [10,14])).toEqual(false);
-      // expect(isOverlappingRange([16,20], [12,18])).toEqual(true);
+      expect(isOverlappingRange([3, 5], [10, 14])).toEqual(false);
+      expect(isOverlappingRange([16, 20], [12, 18])).toEqual(true);
     });
   });
 
