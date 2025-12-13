@@ -26,9 +26,9 @@ describe("Advent of Code - Day 4", () => {
     });
   })
 
-  // describe('Part Two', () => {
-  //   it('it returns the correct value', () => {
-  //     expect(partTwo(metadata[0].sampleInput).result).toEqual(3121910778619);
-  //   });
-  // })
+  describe('Part Two', () => {
+    it('it returns the correct value', () => {
+      expect(partTwo(metadata[0].sampleInput).result).toEqual(43);
+    });
+  })
 });

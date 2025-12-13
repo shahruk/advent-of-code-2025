@@ -16,7 +16,7 @@ const metadata: PuzzleMetadata[] = [
   {
     srcUrl: `https://adventofcode.com/2025/day/4`,
     solution: partOne,
-    prompt: `--- Day 4: Lobby ---`,
+    prompt: `--- Day 4: Printing Department ---`,
     sampleInput,
   },
   {
