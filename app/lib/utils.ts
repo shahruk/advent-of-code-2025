@@ -9,8 +9,5 @@ export const splitUserInputByCharacter = (
   userInput: string,
   char: string = "\n"
 ) => {
-  return userInput
-    .trim()
-    .split(char)
-    .map((line: string) => line.trim());
+  return userInput.trim().split(char);
 };

@@ -17,6 +17,28 @@ export const parsePuzzleInput = (userInput: string) => {
   return problems;
 };
 
+export const parsePuzzleInputRightToleft = (userInput: string) => {
+  let rows = splitUserInputByCharacter(userInput);
+  let problems: string[][] = [];
+  let currentProblemConstruction = [];
+  for (let i = rows[0].length - 1; i >= -1; i--) {
+    // Column scan
+    let column = rows.reduce(
+      (acc, value, index) =>
+        (acc += value[i] && index < rows.length - 1 ? value[i] : ""),
+      ""
+    );
+    if (column.trim().length) {
+      currentProblemConstruction.push(column.trim());
+    } else {
+      currentProblemConstruction.push(rows[rows.length - 1][i + 1]);
+      problems.push(currentProblemConstruction);
+      currentProblemConstruction = [];
+    }
+  }
+  return problems;
+};
+
 export const solveProblem = (problem: string[]): number => {
   let result = parseInt(problem[0]);
   const operator = problem[problem.length - 1];
@@ -39,10 +61,12 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
 };
 
 export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
-  const contents = splitUserInputByCharacter(userInput);
+  const problems = parsePuzzleInputRightToleft(userInput);
   let result = 0;
   const messages: string[] = [];
   const benchmark = performance.now();
-  contents.forEach((line) => {});
+  problems.forEach((problem) => {
+    result += solveProblem(problem);
+  });
   return { result, messages, benchmark: performance.now() - benchmark };
 };
