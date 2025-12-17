@@ -37,27 +37,59 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   let result = 0;
   let messages: string[] = contents;
   const startingColumn = contents[0].indexOf("S") as number;
-  let pathsToExplore: number[][][] = [[[startingColumn, 1]]];
-  let results = [];
-  let visitedNodes = {};
-  
-  while (pathsToExplore.length) {
-    let path = pathsToExplore.pop() as number[][];
-    let [column, row] = path[path.length - 1];
-    if (column < 0 || column > maxColumns) {
+  let nodesToExplore: number[][] = [[startingColumn, 1]];
+  let ancestorNodes: {
+    [key: number]: {
+      [key: number]: number;
+    };
+  } = {
+    1: {
+      [startingColumn]: 1
+    }
+  };
+
+  const markAncestorNodes = (
+    futureRow: number,
+    futureColumn: number,
+    currentRow: number,
+    currentColumn: number
+  ) => {
+    if (!ancestorNodes[futureRow]) {
+      ancestorNodes[futureRow] = {};
+    }
+    if (!ancestorNodes[futureRow][futureColumn]) {
+      ancestorNodes[futureRow][futureColumn] = ancestorNodes[currentRow][currentColumn];
+      contents[futureRow] = contents[futureRow].substring(0, futureColumn) +
+        "|" +
+        contents[futureRow].substring(futureColumn + 1);
+      let newPath = [futureColumn, futureRow];
+      if (futureRow === currentRow) {
+        nodesToExplore.unshift(newPath);
+      } else {
+        nodesToExplore.push(newPath);
+      }
+    } else {
+      ancestorNodes[futureRow][futureColumn] += ancestorNodes[currentRow][currentColumn];
+    }
+  };
+  while (nodesToExplore.length) {
+    let path = nodesToExplore.shift() as number[];
+    let [column, row] = path;
+    if (column < 0 || column > maxColumns || row > contents.length - 1) {
       continue;
     }
-    if (row >= contents.length) {
-      results.push(path);
-    } else {
-      if (contents[row][column] === ".") {
-        pathsToExplore.push(path.concat([[column, row + 1]]));
-      } else if (contents[row][column] === "^") {
-        pathsToExplore.push(path.concat([[column - 1, row]]));
-        pathsToExplore.push(path.concat([[column + 1, row]]));
-      }
+    let futureRow = row + 1;
+    let futureColumn = column;
+    if (!contents[futureRow]) {
+      continue;
+    }
+    if (['.', '|'].includes(contents[futureRow][futureColumn])) markAncestorNodes(futureRow, futureColumn, row, column);
+    else if (contents[futureRow][futureColumn] === '^'){
+      markAncestorNodes(futureRow, futureColumn - 1, row, column);
+      markAncestorNodes(futureRow, futureColumn + 1, row, column);
     }
   }
-  result = results.length;
+
+  result = Object.values(ancestorNodes[contents.length - 1]).reduce((acc: number, value: number) => acc += value, 0);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
