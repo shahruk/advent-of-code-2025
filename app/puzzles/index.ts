@@ -6,6 +6,7 @@ import day04Puzzles from "~/puzzles/day-04";
 import day05Puzzles from "~/puzzles/day-05";
 import day06Puzzles from "~/puzzles/day-06";
 import day07Puzzles from "~/puzzles/day-07";
+import day08Puzzles from "~/puzzles/day-08";
 export const puzzles: { [key: number]: PuzzleMetadata[] } = {
   1: day01Puzzles,
   2: day02Puzzles,
@@ -14,4 +15,5 @@ export const puzzles: { [key: number]: PuzzleMetadata[] } = {
   5: day05Puzzles,
   6: day06Puzzles,
   7: day07Puzzles,
+  8: day08Puzzles,
 };
