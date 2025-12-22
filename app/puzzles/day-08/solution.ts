@@ -1,7 +1,7 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
-const cachedDistances: {[key: string]: {[key: string]: number}} = {};
+const cachedDistances: { [key: string]: { [key: string]: number } } = {};
 export const findEuclidianDistance = (
   point1: string,
   point2: string
@@ -21,78 +21,106 @@ export const findEuclidianDistance = (
   return cachedDistances[point1][point2];
 };
 
-export const findClosestNeighbor = (
+export const getClosestJunctions = (
   contents: string[],
-  connection: connectionInfo,
-  currentPoint: string
-): [string, number] => {
-  let leastDistance = Number.MAX_VALUE;
-  let result = contents[0];
-  for (let i = 0; i < contents.length; i++) {
-    if (contents[i] === currentPoint || connection.circuitReference === contents[i] || connection.connections.includes(contents[i])) continue;
-    const newLeastDistance = findEuclidianDistance(currentPoint, contents[i]);
-    if (newLeastDistance < leastDistance) {
-      result = contents[i];
-      leastDistance = newLeastDistance;
-    }
-  }
-  return [result, leastDistance];
-};
-
-export const findClosestDistanceInSet = (
-  unpairedCircuits: string[],
-  allCircuits: string[]
-): [string, string] => {
-  let minimalDistance = Number.MAX_VALUE;
-  let firstPoint: string = "";
-  let secondPoint: string = "";
-  unpairedCircuits.forEach((unpairedCircuit, index) => {
-    allCircuits.forEach((circuit) => {
-      if (circuit === unpairedCircuit) return;
-      let distance = findEuclidianDistance(unpairedCircuit, circuit);
-      if (distance < minimalDistance) {
-        minimalDistance = distance;
-        firstPoint = unpairedCircuit;
-        secondPoint = circuit;
-      }
+  connectionTarget = 1000
+): { [key: string]: string } => {
+  let connections = 0;
+  let closestJunctions: { [key: string]: string } = {};
+  while (connections < connectionTarget) {
+    contents.forEach((junctionPosition, index) => {
+      let localMinDistance = Number.MAX_VALUE;
+      let matchingJunction1 = junctionPosition;
+      let matchingJunction2 = "";
+      if (closestJunctions[junctionPosition]) return;
+      contents.forEach((junctionPosition2, index2) => {
+        if (junctionPosition2 === junctionPosition) return;
+        if (closestJunctions[junctionPosition2] === junctionPosition) return;
+        let newMinDistance = findEuclidianDistance(
+          matchingJunction1,
+          junctionPosition2
+        );
+        if (newMinDistance < localMinDistance) {
+          matchingJunction2 = junctionPosition2;
+          localMinDistance = newMinDistance;
+        }
+      });
+      closestJunctions[matchingJunction1] = matchingJunction2;
     });
-  });
-  return [firstPoint, secondPoint];
+    connections++;
+  }
+  return closestJunctions;
 };
 
-export const generateCircuitMap = (connections: {
-  [key: string]: string[];
+export const getCircuitMap = (closestJunctions: {
+  [key: string]: string;
 }): { [key: string]: number } => {
-  let result: { [key: string]: number } = {};
-  let connectionKeys = Object.keys(connections);
-  let allConnectionsToExplore = [...connectionKeys];
-  let getCircuitScore = (
-    connection: string,
-    visitedJunctions: { [key: string]: boolean } = {}
-  ): number => {
-    if (visitedJunctions[connection]) return 0;
-    visitedJunctions[connection] = true;
-    connectionKeys.splice(connectionKeys.indexOf(connection), 1);
-    console.log("visiting", connection);
-    return connections[connection].reduce(
-      (acc, conn) => (acc += getCircuitScore(conn, visitedJunctions)),
-      1
-    );
-  };
-  connectionKeys.forEach((connection) => {
-    result[connection] = getCircuitScore(connection);
-    console.log(result);
+  let scores: { [key: string]: number } = {};
+  let nodesInCircuit: { [key: string]: boolean } = {};
+  let nodesToExplore: string[] = Object.keys(closestJunctions);
+  let visitedNodes: { [key: string]: boolean } = {};
+  let pointerNodes: { [key: string]: string } = {};
+  let circuits: { [key: string]: string } = {};
+
+  Object.keys(closestJunctions).forEach((junctionKey) => {
+    if (visitedNodes[junctionKey]) return;
+    // Find all references to this key
+    let pointers = [
+      ...Object.keys(closestJunctions).filter(
+        (key) => closestJunctions[key] === junctionKey
+      ),
+    ];
+    let nodes = pointers.filter((pointer) => !visitedNodes[pointer]);
+    let score = 0;
+    // These all point to this key
+    // nodes.forEach(node => {
+    //   // console.log(node, pointerNodes)
+    //   if (visitedNodes[node]) return;
+    //   // There is a circuit that needs to be merged
+    //   if (pointerNodes[node]) {
+    //     console.log('there is a pointer here', node)
+    //     return;
+    //   }
+    //   visitedNodes[node] = true;
+    //   pointerNodes[node] = junctionKey;
+    //   pointerNodes[junctionKey] = junctionKey;
+    //   score++;
+    // });
+    // if (!scores[junctionKey]) scores[junctionKey] = 0;
+    nodesInCircuit[junctionKey] = true;
+    nodes.map((node) => {
+      let targetToAddTo = junctionKey;
+      if (nodesInCircuit[node]) {
+        if (pointerNodes[node]) {
+          targetToAddTo = pointerNodes[node];
+          score += scores[pointerNodes[node]];
+        }
+      } else {
+        score++;
+        nodesInCircuit[node] = true;
+        pointerNodes[node] = junctionKey;
+      }
+      scores[targetToAddTo] = score;
+    });
+
+    console.log("C", scores);
   });
-
-  return result;
+  return scores;
 };
 
-type connectionInfo = {
-  id: string;
-  connections: string[];
-  circuitReference?: string;
+export const findClosestNeighbor = (junction: string, contents: string[], exclusionList: string[] = []): [string, number] => {
+  let minDistance = Number.MAX_VALUE;
+  let discoveredCircuit = '';
+  contents.forEach(line => {
+    if (exclusionList.includes(line)) return;
+    let euclidian = findEuclidianDistance(junction, line);
+    if (euclidian < minDistance) {
+      minDistance = euclidian;
+      discoveredCircuit = line;
+    }
+  });
+  return [discoveredCircuit, minDistance];
 };
-type connectionMap = { [key: string]: connectionInfo };
 
 export const partOne = (
   userInput: string,
@@ -103,115 +131,74 @@ export const partOne = (
   let connections = 0;
   let result = 0;
   let messages: string[] = [];
-  let directConnections: { [key: string]: string[] } = {};
-  let circuits: connectionMap = contents.reduce(
-    (acc: connectionMap, value: string) => {
-      acc[value] = { id: value, connections: [] };
-      return acc;
-    },
-    {}
-  );
-
-  const findCircuitRecord = (record: connectionInfo) => {
-    while (record.circuitReference) {
-      record = circuits[record.circuitReference];
-    }
-    return record;
-  };
-
-  const connectJunctions = (junction1: string, junction2: string) => {
-    if (!circuits[junction1]) {
-      circuits[junction1] = {
-        id: junction1,
-        connections: [],
-      };
-    }
-    if (!circuits[junction2]) {
-      circuits[junction2] = {
-        id: junction2,
-        connections: [],
-      };
-    }
-
-    // Merge junction2 into junction 1
-    circuits[junction1].connections.push(junction2);
-    circuits[junction2].connections.push(junction1);
-    // If there's a reference to a circuit, merge circuits
-    // if (circuits[junction1].circuitReference) {
-    // let circuitRecord = findCircuitRecord(circuits[junction1]);
-    // let circuitRecordToMerge = findCircuitRecord(circuits[junction2]);
-    // circuitRecord.connections.push(junction2);
-    // circuitRecord.connections = circuitRecord.connections.concat(
-    //   circuitRecordToMerge.connections
-    // );
-    // if (circuitRecordToMerge.id !== circuitRecord.id) {
-    //   circuitRecordToMerge.circuitReference = circuitRecord.id;
-    // }
-  };
-
-  // while (connections < connectionTarget) {
-    // connections++;
-    let lowestDistance = Number.MAX_VALUE;
-    let junction1: string = "";
-    let junction2: string = "";
-    // We need to find the shortest connection amongst all the unconnected
-    Object.values(circuits).filter(circuit => !circuit.connections.length).forEach((junction) => {
-      let [connection, score] = findClosestNeighbor(
-        contents,
-        circuits[junction.id],
-        junction.id
-      );
-      if (score < lowestDistance) {
-        lowestDistance = score;
-        junction1 = junction.id;
-        junction2 = connection;
-      }
-    });
-
-    // connectJunctions(junction1, junction2);
-    // If both have references, merge the two circuits
-    // if (circuits[junction1].circuitReference && circuits[junction2].circuitReference) {
-    //   circuits[circuits[junction1].circuitReference as string].connections = circuits[junction1].connections.concat(circuits[circuits[junction2].circuitReference as string].connections);
-    //   circuits[junction2].circuitReference = circuits[junction1].circuitReference;
-    // } else {
-    // // if (!circuits[junction1].circuitReference) {
-    //   // If the connection we're interested in isn't also connected
-    //   if (!(circuits[junction2].connections.length)) {
-    //     circuits[junction1].connections = [junction2].concat(circuits[junction1].connections.concat(circuits[junction2].connections));
-    //     circuits[junction2].connections = [junction1];
-    //     circuits[junction2].circuitReference = circuits[junction1].circuitReference || junction1;
-    //   } else {
-    //     // We want to insert our circuit into the existing reference
-    //     circuits[junction2].connections = circuits[junction2].connections.concat(circuits[junction1].connections);
-    //     circuits[junction1].connections = [junction2];
-    //     circuits[junction1].circuitReference = circuits[junction2].circuitReference || junction2;
-    //     // console.log('here for 1', connectionToPlace);
-    //   }
-    // } else {
-    // }
-  // }
-
-  const remainingCircuits = Object.fromEntries(
-    Object.entries(circuits).filter(([key]) => !circuits[key].circuitReference)
-  );
   let scores: number[] = [];
-  let connectedJunctions: {[key: string]: boolean} = {};
-  Object.values(remainingCircuits).map(value => {
+  // let closestJunctions = getClosestJunctions(contents, connectionTarget);
+
+  let circuits: { [key: string]: string[] } = contents.reduce((acc: {[key: string]: string[]}, value) => {
+    acc[value] = [];
+    return acc;
+  }, {});
+
+  let circuitReferenceMap : { [key: string]: string } = {};
+  let visitedNodes: {[key: string]: boolean } = {};
+  
+  while (connections < connectionTarget) {
+    let leastDistance = Number.MAX_VALUE;
+    let circuitToAddTo = '';
+    let circuitToAdd = '';
+    Object.keys(circuits).forEach(circuit => {
+      if (visitedNodes[circuit]) {
+        return;
+      }
+        let exclusionList = [circuit].concat(circuits[circuit]);
+        let [neighbor, distance] = findClosestNeighbor(circuit, contents, exclusionList);
+        if (distance < leastDistance) {
+          circuitToAddTo = circuit;
+          circuitToAdd = neighbor;
+          leastDistance = distance;
+        }
+      });
+      if (circuitToAddTo) {
+        circuits[circuitToAddTo].push(circuitToAdd);
+        circuits[circuitToAdd].push(circuitToAddTo);
+        visitedNodes[circuitToAddTo] = true;
+      }
+      connections++;
+  }
+  console.log('circuits', circuits);
+    
+
+  let circuitKeys = Object.keys(circuits);
+  let scoreMap: {[key: string]: number } = {};
+  let junctionMap: {[key: string]: string[]} = {};
+  visitedNodes = {};
+  while (circuitKeys.length) {
+    let currentCircuit = circuitKeys.shift() as string;
+    if (visitedNodes[currentCircuit]) continue;
+    // visitedNodes[currentCircuit] = true;
     let score = 0;
-    let queue = [value];
+    let junctions = [];
+    let queue = circuits[currentCircuit];
     while (queue.length) {
-      let junction = queue.pop() as connectionInfo;
-      if (connectedJunctions[junction.id]) continue;
-      connectedJunctions[junction.id] = true;
-      remainingCircuits[junction.id].connections.forEach(junction => {
-        queue.push(remainingCircuits[junction]);
-      })
+      let nextCircuit = queue.pop() as string;
+      if (visitedNodes[nextCircuit]) continue;
+      visitedNodes[nextCircuit] = true;
+      queue = queue.concat(circuits[nextCircuit]);
+      junctions.push(nextCircuit);
       score++;
+      scoreMap[currentCircuit] = score;
+      junctionMap[currentCircuit] = junctions;
     }
-    if (score > 0) scores.push(score);
-  });
+    scores.push(score);
+    // let connections = circuits[currentCircuit];
+  }
   scores.sort((a,b) => b - a);
-  result = scores.slice(0, 3).reduce((acc, value) => acc *= value, 1);
+  console.log(circuits, 'score for', junctionMap);
+
+  // let circuitScore = getCircuitMap(closestJunctions);
+  console.log(scoreMap);
+
+  result = scores.slice(0, 3).reduce((acc, value) => (acc *= value), 1);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
 
