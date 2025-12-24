@@ -1,13 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
   findEuclidianDistance,
-  getCircuitMap,
-  getClosestJunctions,
+  getCircuits,
+  getClosestPairs,
   partOne,
-  partTwo,
+  // partTwo,
 } from "./solution";
 import metadata from ".";
 import { splitUserInputByCharacter } from "~/lib/utils";
+
+function shuffle(arr: any[]): any[] {
+  let array = [...arr];
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 
 describe("Advent of Code - Day 8", () => {
   describe("findEuclidianDistance", () => {
@@ -18,56 +28,30 @@ describe("Advent of Code - Day 8", () => {
     });
   });
 
-  describe("getClosestJunctions", () => {
+
+  describe('getClosestPairs', () => {
     it("returns the correct value", () => {
-      expect(
-        getClosestJunctions(
-          splitUserInputByCharacter(metadata[0].sampleInput),
-          10
-        )
-      ).toEqual({
-        "117,168,530": "352,342,300",
-        "162,817,812": "425,690,689",
-        "216,146,977": "117,168,530",
-        "346,949,466": "425,690,689",
-        "352,342,300": "542,29,236",
-        "425,690,689": "431,825,988",
-        "431,825,988": "162,817,812",
-        "466,668,158": "352,342,300",
-        "52,470,668": "117,168,530",
-        "542,29,236": "862,61,35",
-        "57,618,57": "466,668,158",
-        "592,479,940": "425,690,689",
-        "739,650,466": "906,360,560",
-        "805,96,715": "984,92,344",
-        "819,987,18": "941,993,340",
-        "862,61,35": "984,92,344",
-        "906,360,560": "805,96,715",
-        "941,993,340": "739,650,466",
-        "970,615,88": "819,987,18",
-        "984,92,344": "906,360,560",
-      });
+      const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)));
+      console.log('pairs', pairs);
+      expect(pairs[0].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(["162,817,812", "425,690,689"]);
+      expect(pairs[1].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['162,817,812', '431,825,988']);
+      expect(pairs[2].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['805,96,715', '906,360,560']);
+      expect(pairs[3].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['425,690,689', '431,825,988']);
     });
   });
-  describe("getCircuitMap", () => {
-    it("returns the correct value", () => {
-      expect(
-        getCircuitMap({
-          "1": "4",
-          "2": "1",
-          "3": "1",
-          "4": "2",
-          "5": "2",
-        })
-      ).toEqual({
-        "1": 5,
-        // "2": 0,
-        // "3": 0,
-        // "4": 0,
-      });
+
+  describe('getCircuits', () => {
+    it('returns the correct value', () => {
+      const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)));
+      const circuits = getCircuits(pairs, 10);
+      expect(circuits['162,817,812'].length).toEqual(4);
+      expect(circuits['906,360,560'].length).toEqual(5);
+      expect(circuits['52,470,668'].length).toEqual(2);
+      expect(circuits['819,987,18'].length).toEqual(2);
     });
-  });
-  describe.only("partOne", () => {
+  })
+
+  describe("partOne", () => {
     it("returns the correct value", () => {
       expect(partOne(metadata[0].sampleInput, 10).result).toEqual(40);
     });
