@@ -3,7 +3,9 @@ import {
   findEuclidianDistance,
   getCircuits,
   getClosestPairs,
+  getFullCircuit,
   partOne,
+  partTwo,
   // partTwo,
 } from "./solution";
 import metadata from ".";
@@ -50,7 +52,14 @@ describe("Advent of Code - Day 8", () => {
       expect(circuits['52,470,668'].length).toEqual(2);
       expect(circuits['819,987,18'].length).toEqual(2);
     });
-  })
+  });
+
+  describe('getFullCircuit', () => {
+    it('returns the correct value', () => {
+      const circuit = getFullCircuit(splitUserInputByCharacter(metadata[0].sampleInput));
+      console.log('full circuit', circuit);
+    });
+  });
 
   describe("partOne", () => {
     it("returns the correct value", () => {
@@ -58,9 +67,9 @@ describe("Advent of Code - Day 8", () => {
     });
   });
 
-  // describe("partTwo", () => {
-  //   it("returns the correct value", () => {
-  //     expect(partTwo(metadata[0].sampleInput).result).toEqual(40);
-  //   });
-  // });
+  describe("partTwo", () => {
+    it("returns the correct value", () => {
+      expect(partTwo(metadata[0].sampleInput).result).toEqual(25272);
+    });
+  });
 });

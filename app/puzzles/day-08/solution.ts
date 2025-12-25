@@ -66,6 +66,45 @@ export const getCircuits = (contents: string[], connectionCount = 1000) => {
   return circuits;
 };
 
+export const getFullCircuit = (contents: string[]): [{[key: string]: string[]}, JunctionPair] => {
+  let closestPairs: JunctionPair[] = getClosestPairs(
+    contents,
+  );
+  let circuits: { [key: string]: string[] } = contents.reduce((acc: {[key: string]: string[]}, curr: string) => {
+    acc[curr] = [curr];
+    return acc;
+  }, {});
+  let circuitReferenceMap: {[key: string]: { id: string, pointer: string }} = {};
+  let lastPair = closestPairs[0];
+  while (!(Object.keys(circuits).length === 1 && Object.values(circuits)[0].length === contents.length)) {
+    let nextPair = closestPairs.shift() as JunctionPair;
+    if (nextPair) {
+      if (!circuitReferenceMap[nextPair[0]]) circuitReferenceMap[nextPair[0]] = { id: nextPair[0], pointer: nextPair[0]};
+      if (!circuitReferenceMap[nextPair[1]]) circuitReferenceMap[nextPair[1]] = { id: nextPair[1], pointer: nextPair[1]};
+      let rootInsert = nextPair[0];
+      while (circuitReferenceMap[rootInsert].pointer !== circuitReferenceMap[rootInsert].id) {
+        rootInsert = circuitReferenceMap[rootInsert].pointer;
+      }
+
+      let secondCircuitMerge = nextPair[1];
+      while (circuitReferenceMap[secondCircuitMerge].pointer !== circuitReferenceMap[secondCircuitMerge].id) {
+        secondCircuitMerge = circuitReferenceMap[secondCircuitMerge].pointer;
+      }
+      if (rootInsert === secondCircuitMerge) continue;
+
+      let junctionsToMerge = circuits[circuitReferenceMap[secondCircuitMerge].pointer];
+      circuits[circuitReferenceMap[rootInsert].pointer] = circuits[circuitReferenceMap[rootInsert].pointer].concat(junctionsToMerge);
+      delete circuits[secondCircuitMerge];
+      circuitReferenceMap[secondCircuitMerge].pointer = circuitReferenceMap[rootInsert].pointer;
+      lastPair = nextPair;
+    } else {
+      throw new Error('There are no more closest pairs of junctions to connect.');
+    }
+  }
+
+  return [circuits, lastPair];
+};
+
 export const partOne = (
   userInput: string,
   connectionTarget = 1000
@@ -87,7 +126,12 @@ export const partOne = (
 export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   const benchmark = performance.now();
   const contents = splitUserInputByCharacter(userInput);
-  let result = 0;
+  let result: number = 0;
   let messages: string[] = contents;
+  const [circuit, lastPair] = getFullCircuit(contents);
+  result = lastPair.slice(0, 2).reduce((acc, value) => {
+    (acc as number) *= parseInt(value as string);
+    return acc;
+  }, 1) as number;
   return { result, messages, benchmark: performance.now() - benchmark };
 };
