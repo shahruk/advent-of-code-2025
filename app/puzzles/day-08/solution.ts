@@ -16,39 +16,67 @@ export const findEuclidianDistance = (
 };
 
 export type JunctionPair = [string, string, number];
-export const getClosestPairs = (contents: string[]): JunctionPair[] => {
-  let results: JunctionPair[] = [];
-  let directConnections: {[key: string]: string} = {};
-  contents.forEach(junction => {
-    let result: JunctionPair = [junction, junction, Number.MAX_VALUE];
-    contents.forEach(junction2 => {
-      if (junction === junction2) return;
-      // if ((directConnections[junction] && directConnections[junction] == junction2) || (directConnections[junction2] && directConnections[junction2] === junction)) return;
-      let distance = findEuclidianDistance(junction, junction2);
-      if (distance < result[2]) {
-        result = [junction, junction2, distance];
-      }
-    });
-    directConnections[result[0]] = result[1];
-    results.push(result);
+export const getClosestPairForJunction = (
+  contents: string[],
+  junction: string,
+  directConnections: { [key: string]: string[] } = {}
+) => {
+  let result: JunctionPair = [junction, junction, Number.MAX_VALUE];
+  contents.forEach((junction2) => {
+    if (junction === junction2) return;
+    // Check if already paired
+    const isAlreadyPaired =
+      directConnections[junction] &&
+      directConnections[junction].includes(junction2);
+    if (isAlreadyPaired) return;
+    let distance = findEuclidianDistance(junction, junction2);
+    if (distance < result[2]) {
+      result = [junction, junction2, distance];
+    }
   });
-  return results.sort((a,b) => a[2] - b[2]);
+  return result;
 };
 
-export const getCircuits = (closestPairs: JunctionPair[], connectionCount = 1000) => {
+export const getClosestPairs = (
+  contents: string[],
+  directConnections: { [key: string]: string[] } = {}
+): JunctionPair[] => {
+  let results: JunctionPair[] = [];
+  let closestPairs: { [key: string]: string } = {};
+  contents.forEach((junction) => {
+    let result: JunctionPair = getClosestPairForJunction(contents, junction, directConnections);
+    closestPairs[result[0]] = result[1];
+    results.push(result);
+  });
+  return results.sort((a, b) => a[2] - b[2]);
+};
+
+export const getCircuits = (contents: string[], connectionCount = 1000) => {
   let connections = 0;
-  let directConnections: {[key: string]: string[]} = {};
-  while (connections++ < connectionCount) {
+  let directConnections: { [key: string]: string[] } = {};
+  let closestPairs: JunctionPair[] = getClosestPairs(
+    contents,
+    directConnections
+  );
+  while (connections < connectionCount) {
     let nextPair = closestPairs.shift() as JunctionPair;
     if (!directConnections[nextPair[0]]) directConnections[nextPair[0]] = [];
     if (!directConnections[nextPair[1]]) directConnections[nextPair[1]] = [];
-    directConnections[nextPair[0]].push(nextPair[1]);
-    directConnections[nextPair[1]].push(nextPair[0]);
+    if (directConnections[nextPair[0]].includes(nextPair[1])) {
+      closestPairs = getClosestPairs(contents, directConnections);
+    } else {
+      directConnections[nextPair[0]].push(nextPair[1]);
+      directConnections[nextPair[1]].push(nextPair[0]);
+      connections++;
+    }
+    if (connections >= contents.length && connections < connectionCount) {
+      connections = connectionCount;
+    }
   }
 
-  let circuits: {[key: string]: string[]} = {};
-  let visitedJunctions: {[key: string]: boolean} = {};
-  Object.keys(directConnections).forEach(circuitName => {
+  let circuits: { [key: string]: string[] } = {};
+  let visitedJunctions: { [key: string]: boolean } = {};
+  Object.keys(directConnections).forEach((circuitName) => {
     let queue = [circuitName];
     while (queue.length) {
       let junction = queue.shift() as string;
@@ -71,10 +99,11 @@ export const partOne = (
   let result = 0;
   let messages: string[] = [];
   let scores: number[] = [];
-  const pairs = getClosestPairs(contents);
-  const circuits = getCircuits(pairs, connectionTarget);
-  Object.keys(circuits).forEach(circuit => scores.push(circuits[circuit].length));
-  scores.sort((a,b) => b - a);
+  const circuits = getCircuits(contents, connectionTarget);
+  Object.keys(circuits).forEach((circuit) =>
+    scores.push(circuits[circuit].length)
+  );
+  scores.sort((a, b) => b - a);
   console.log(circuits, scores);
   result = scores.slice(0, 3).reduce((acc, value) => (acc *= value), 1);
   return { result, messages, benchmark: performance.now() - benchmark };
