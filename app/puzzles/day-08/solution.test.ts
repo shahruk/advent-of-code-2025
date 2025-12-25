@@ -29,7 +29,7 @@ describe("Advent of Code - Day 8", () => {
   });
 
 
-  describe.only('getClosestPairs', () => {
+  describe('getClosestPairs', () => {
     it("returns the correct value", () => {
       const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)));
       console.log('pairs', pairs);
@@ -44,6 +44,7 @@ describe("Advent of Code - Day 8", () => {
   describe('getCircuits', () => {
     it('returns the correct value', () => {
       const circuits = getCircuits(splitUserInputByCharacter(metadata[0].sampleInput), 10);
+      console.log('circuits', circuits);
       expect(circuits['162,817,812'].length).toEqual(4);
       expect(circuits['906,360,560'].length).toEqual(5);
       expect(circuits['52,470,668'].length).toEqual(2);

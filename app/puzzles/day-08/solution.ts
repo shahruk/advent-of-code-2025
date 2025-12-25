@@ -1,7 +1,7 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
-const cachedDistances: { [key: string]: { [key: string]: number } } = {};
+
 export const findEuclidianDistance = (
   point1: string,
   point2: string
@@ -16,29 +16,6 @@ export const findEuclidianDistance = (
 };
 
 export type JunctionPair = [string, string, number];
-export const getClosestPairForJunction = (
-  contents: string[],
-  junction: string,
-  closestPairs: { [key: string]: string } = {}
-) => {
-  let result: JunctionPair = [junction, junction, Number.MAX_VALUE];
-  contents.forEach((junction2) => {
-    if (junction === junction2) return;
-    // Check if already paired
-    // const isAlreadyPaired =
-    //   closestPairs[junction2] &&
-    //   closestPairs[junction2] === junction;
-    // if (isAlreadyPaired) return;
-    let distance = findEuclidianDistance(junction, junction2);
-    if (distance < result[2]) {
-      result = [junction, junction2, distance];
-    }
-    if (Math.floor(distance) === 328) {
-      console.log(distance, result)
-    }
-  });
-  return result;
-};
 
 export const getClosestPairs = (
   contents: string[]): JunctionPair[] => {
@@ -61,22 +38,16 @@ export const getCircuits = (contents: string[], connectionCount = 1000) => {
   let directConnections: { [key: string]: string[] } = {};
   let closestPairs: JunctionPair[] = getClosestPairs(
     contents,
-    // directConnections
   );
   while (connections < connectionCount) {
     let nextPair = closestPairs.shift() as JunctionPair;
-    if (!directConnections[nextPair[0]]) directConnections[nextPair[0]] = [];
-    if (!directConnections[nextPair[1]]) directConnections[nextPair[1]] = [];
-    // if (directConnections[nextPair[0]].includes(nextPair[1])) {
-    //   closestPairs = getClosestPairs(contents, directConnections);
-    // } else {
+    if (nextPair) {
+      if (!directConnections[nextPair[0]]) directConnections[nextPair[0]] = [];
+      if (!directConnections[nextPair[1]]) directConnections[nextPair[1]] = [];
       directConnections[nextPair[0]].push(nextPair[1]);
       directConnections[nextPair[1]].push(nextPair[0]);
-      connections++;
-    // }
-    if (connections > contents.length && connections < connectionCount) {
-      connections = connectionCount;
     }
+    connections++;
   }
 
   let circuits: { [key: string]: string[] } = {};
