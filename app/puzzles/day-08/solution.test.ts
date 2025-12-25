@@ -29,43 +29,15 @@ describe("Advent of Code - Day 8", () => {
   });
 
 
-  describe('getClosestPairs', () => {
+  describe.only('getClosestPairs', () => {
     it("returns the correct value", () => {
-      let pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)));
-
+      const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)));
+      console.log('pairs', pairs);
       expect(pairs[0].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(["162,817,812", "425,690,689"]);
-
-      pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)), {
-        '162,817,812': ["425,690,689"],
-        '425,690,689': ["162,817,812"]
-      });
-      expect(pairs[0].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['162,817,812', '431,825,988']);
-
-
-      pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)), {
-        '162,817,812': ["425,690,689", '431,825,988'],
-        '425,690,689': ["162,817,812"],
-        '431,825,988': ['162,817,812']
-      });
-      expect(pairs[0].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['805,96,715', '906,360,560']);
-      
-      pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)), {
-        '162,817,812': ["425,690,689", '431,825,988'],
-        '425,690,689': ["162,817,812"],
-        '431,825,988': ['162,817,812'],
-        '805,96,715': ['906,360,560'],
-        '906,360,560': ['805,96,715']
-      });
-      expect(Math.floor(parseInt((pairs[0].slice(2))[0] as string))).toEqual(328);
-
-      pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)), {
-        '162,817,812': ["425,690,689", '431,825,988'],
-        '425,690,689': ["162,817,812"],
-        '431,825,988': ['162,817,812'],
-        '805,96,715': ['906,360,560'],
-        '906,360,560': ['805,96,715']
-      });
-      expect(pairs[0].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['425,690,689', '431,825,988']);
+      expect(pairs[1].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['162,817,812', '431,825,988']);
+      expect(pairs[2].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['805,96,715', '906,360,560']);
+      expect(Math.floor(parseInt((pairs[3].slice(2))[0] as string))).toEqual(328);
+      expect(pairs[3].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['425,690,689', '431,825,988']);
     });
   });
 

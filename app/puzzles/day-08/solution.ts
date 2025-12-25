@@ -19,34 +19,39 @@ export type JunctionPair = [string, string, number];
 export const getClosestPairForJunction = (
   contents: string[],
   junction: string,
-  directConnections: { [key: string]: string[] } = {}
+  closestPairs: { [key: string]: string } = {}
 ) => {
   let result: JunctionPair = [junction, junction, Number.MAX_VALUE];
   contents.forEach((junction2) => {
     if (junction === junction2) return;
     // Check if already paired
-    const isAlreadyPaired =
-      directConnections[junction] &&
-      directConnections[junction].includes(junction2);
-    if (isAlreadyPaired) return;
+    // const isAlreadyPaired =
+    //   closestPairs[junction2] &&
+    //   closestPairs[junction2] === junction;
+    // if (isAlreadyPaired) return;
     let distance = findEuclidianDistance(junction, junction2);
     if (distance < result[2]) {
       result = [junction, junction2, distance];
+    }
+    if (Math.floor(distance) === 328) {
+      console.log(distance, result)
     }
   });
   return result;
 };
 
 export const getClosestPairs = (
-  contents: string[],
-  directConnections: { [key: string]: string[] } = {}
-): JunctionPair[] => {
+  contents: string[]): JunctionPair[] => {
   let results: JunctionPair[] = [];
-  let closestPairs: { [key: string]: string } = {};
+  let calculatedPairs: {[key: string]: number} = {};
   contents.forEach((junction) => {
-    let result: JunctionPair = getClosestPairForJunction(contents, junction, directConnections);
-    closestPairs[result[0]] = result[1];
-    results.push(result);
+    contents.forEach((junction2) => {
+      if (junction === junction2) return;
+      if (calculatedPairs[`${junction2}::${junction}`]) return;
+      let distance = findEuclidianDistance(junction, junction2);
+      calculatedPairs[`${junction}::${junction2}`] = distance;
+      results.push([junction, junction2, distance]);
+    });
   });
   return results.sort((a, b) => a[2] - b[2]);
 };
@@ -56,20 +61,20 @@ export const getCircuits = (contents: string[], connectionCount = 1000) => {
   let directConnections: { [key: string]: string[] } = {};
   let closestPairs: JunctionPair[] = getClosestPairs(
     contents,
-    directConnections
+    // directConnections
   );
   while (connections < connectionCount) {
     let nextPair = closestPairs.shift() as JunctionPair;
     if (!directConnections[nextPair[0]]) directConnections[nextPair[0]] = [];
     if (!directConnections[nextPair[1]]) directConnections[nextPair[1]] = [];
-    if (directConnections[nextPair[0]].includes(nextPair[1])) {
-      closestPairs = getClosestPairs(contents, directConnections);
-    } else {
+    // if (directConnections[nextPair[0]].includes(nextPair[1])) {
+    //   closestPairs = getClosestPairs(contents, directConnections);
+    // } else {
       directConnections[nextPair[0]].push(nextPair[1]);
       directConnections[nextPair[1]].push(nextPair[0]);
       connections++;
-    }
-    if (connections >= contents.length && connections < connectionCount) {
+    // }
+    if (connections > contents.length && connections < connectionCount) {
       connections = connectionCount;
     }
   }
@@ -104,7 +109,6 @@ export const partOne = (
     scores.push(circuits[circuit].length)
   );
   scores.sort((a, b) => b - a);
-  console.log(circuits, scores);
   result = scores.slice(0, 3).reduce((acc, value) => (acc *= value), 1);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
