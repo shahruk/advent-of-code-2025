@@ -3,10 +3,16 @@ import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { SolutionArea } from "~/components/solution-area";
 import { puzzles } from "~/puzzles";
+import { useEffect, useState } from "react";
 
 export default function PuzzleDayPage() {
   const { id } = useParams<{ id: string }>();
+  let values: string[] = [];
   const puzzleData = puzzles[parseInt(id as string)];
+  puzzleData.forEach(puzzle => {
+    values.push(puzzle.sampleInput);
+  });
+  const [userValues, setUserValues] = useState<string[]>(values);
 
   return (
     <div className="flex w-full min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -27,28 +33,35 @@ export default function PuzzleDayPage() {
             </TabsList>
             {puzzleData.map((puzzle, index) => (
               <TabsContent key={index + 1} value={(index + 1).toString()}>
+                <div className="mb-4">
+                  <Button asChild>
+                    <a
+                      target="_blank"
+                      href={puzzle.srcUrl}
+                      rel="noopener noreferrer"
+                    >
+                      Day {id} Puzzle Link
+                    </a>
+                  </Button>
+                </div>
                 <div className="flex flex-col w-full justify-between align-top ">
                   <pre className="text-sm px-4 py-2 pb-4 border-2 border-slate-300 max-h-[50vh] block w-full overflow-scroll whitespace-break-spaces">
                     <h2 className="scroll-m-20 border-b pb-2 mb-4 text-xl font-semibold tracking-tight first:mt-0">
                       Part {index + 1}
                     </h2>
-                    <div className="mb-4">
-                      <Button asChild>
-                        <a
-                          target="_blank"
-                          href={puzzle.srcUrl}
-                          rel="noopener noreferrer"
-                        >
-                          Puzzle Link
-                        </a>
-                      </Button>
-                    </div>
                     {puzzle.prompt.trim()}
                   </pre>
 
                   <SolutionArea
-                    defaultValue={puzzle.sampleInput}
+                    defaultValue={userValues[index]}
                     solutionHandler={puzzle.solution}
+                    onUserInputChanged={((value: string) => {
+                      if (value) {
+                        let newUserValues = [...userValues];
+                        newUserValues[index] = value;
+                        setUserValues(newUserValues);
+                      }
+                    })}
                   />
                 </div>
               </TabsContent>
