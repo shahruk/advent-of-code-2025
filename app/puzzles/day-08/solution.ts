@@ -18,19 +18,24 @@ export const findEuclidianDistance = (
 export type JunctionPair = [string, string, number];
 
 export const getClosestPairs = (
-  contents: string[]): JunctionPair[] => {
+  contents: string[],
+  calculatedPairs: {[key: string]: number} = {}
+): JunctionPair[] => {
   let results: JunctionPair[] = [];
-  let calculatedPairs: {[key: string]: number} = {};
-  contents.forEach((junction) => {
-    contents.forEach((junction2) => {
-      if (junction === junction2) return;
-      if (calculatedPairs[`${junction2}::${junction}`]) return;
+  for(let i = 0; i < contents.length; i++) {
+    const junction = contents[i];
+    for(let j = i + 1; j < contents.length; j++) {
+      const junction2 = contents[j];
+      if (junction === junction2) continue;
+      if (calculatedPairs[`${junction2}::${junction}`]) continue;
       let distance = findEuclidianDistance(junction, junction2);
       calculatedPairs[`${junction}::${junction2}`] = distance;
       results.push([junction, junction2, distance]);
-    });
-  });
-  return results.sort((a, b) => a[2] - b[2]);
+    }
+  }
+
+
+  return results.sort((a, b) => b[2] - a[2]);
 };
 
 export const getCircuits = (contents: string[], connectionCount = 1000) => {
@@ -40,7 +45,7 @@ export const getCircuits = (contents: string[], connectionCount = 1000) => {
     contents,
   );
   while (connections < connectionCount) {
-    let nextPair = closestPairs.shift() as JunctionPair;
+    let nextPair = closestPairs.pop() as JunctionPair;
     if (nextPair) {
       if (!directConnections[nextPair[0]]) directConnections[nextPair[0]] = [];
       if (!directConnections[nextPair[1]]) directConnections[nextPair[1]] = [];
@@ -55,12 +60,12 @@ export const getCircuits = (contents: string[], connectionCount = 1000) => {
   Object.keys(directConnections).forEach((circuitName) => {
     let queue = [circuitName];
     while (queue.length) {
-      let junction = queue.shift() as string;
+      let junction = queue.pop() as string;
       if (visitedJunctions[junction]) continue;
       visitedJunctions[junction] = true;
       if (!circuits[circuitName]) circuits[circuitName] = [];
       circuits[circuitName].push(junction);
-      queue = queue.concat(directConnections[junction]);
+      queue = [...queue, ...directConnections[junction]];
     }
   });
   return circuits;
@@ -76,27 +81,35 @@ export const getFullCircuit = (contents: string[]): [{[key: string]: string[]}, 
   }, {});
   let circuitReferenceMap: {[key: string]: { id: string, pointer: string }} = {};
   let lastPair = closestPairs[0];
-  while (!(Object.keys(circuits).length === 1 && Object.values(circuits)[0].length === contents.length)) {
-    let nextPair = closestPairs.shift() as JunctionPair;
+  // let objectKeys = Object.keys(circuits).length;
+  // let objectValues = Object.values(circuits)[0];
+  let circuitsLeft = contents.length;
+
+  while ((circuitsLeft > 1)) {
+    let nextPair = closestPairs.pop() as JunctionPair;
     if (nextPair) {
       if (!circuitReferenceMap[nextPair[0]]) circuitReferenceMap[nextPair[0]] = { id: nextPair[0], pointer: nextPair[0]};
       if (!circuitReferenceMap[nextPair[1]]) circuitReferenceMap[nextPair[1]] = { id: nextPair[1], pointer: nextPair[1]};
       let rootInsert = nextPair[0];
       while (circuitReferenceMap[rootInsert].pointer !== circuitReferenceMap[rootInsert].id) {
+        circuitReferenceMap[rootInsert].pointer = circuitReferenceMap[circuitReferenceMap[rootInsert].pointer].pointer;
         rootInsert = circuitReferenceMap[rootInsert].pointer;
       }
-
+      
       let secondCircuitMerge = nextPair[1];
       while (circuitReferenceMap[secondCircuitMerge].pointer !== circuitReferenceMap[secondCircuitMerge].id) {
+        circuitReferenceMap[secondCircuitMerge].pointer = circuitReferenceMap[circuitReferenceMap[secondCircuitMerge].pointer].pointer;
         secondCircuitMerge = circuitReferenceMap[secondCircuitMerge].pointer;
       }
+
       if (rootInsert === secondCircuitMerge) continue;
 
       let junctionsToMerge = circuits[circuitReferenceMap[secondCircuitMerge].pointer];
-      circuits[circuitReferenceMap[rootInsert].pointer] = circuits[circuitReferenceMap[rootInsert].pointer].concat(junctionsToMerge);
+      circuits[circuitReferenceMap[rootInsert].pointer] = [...circuits[circuitReferenceMap[rootInsert].pointer], ...junctionsToMerge];
       delete circuits[secondCircuitMerge];
       circuitReferenceMap[secondCircuitMerge].pointer = circuitReferenceMap[rootInsert].pointer;
       lastPair = nextPair;
+      circuitsLeft--;
     } else {
       throw new Error('There are no more closest pairs of junctions to connect.');
     }

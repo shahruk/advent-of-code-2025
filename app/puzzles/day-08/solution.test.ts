@@ -33,7 +33,7 @@ describe("Advent of Code - Day 8", () => {
 
   describe('getClosestPairs', () => {
     it("returns the correct value", () => {
-      const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput)));
+      const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput))).reverse();
       console.log('pairs', pairs);
       expect(pairs[0].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(["162,817,812", "425,690,689"]);
       expect(pairs[1].slice(0,2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual(['162,817,812', '431,825,988']);
