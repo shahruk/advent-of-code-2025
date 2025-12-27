@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateMaxAreaWithinPerimeter, getTilePositions, isGreenTile, isRedTile, partOne, partTwo } from "./solution";
+import { calculateAreaBetweenPoints, calculateMaxAreaWithinPerimeter, getTilePositions, isGreenTile, isRedTile, partOne, partTwo } from "./solution";
 import metadata from ".";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
@@ -18,6 +18,13 @@ describe("Advent of Code - Day 9", () => {
     });
   });
 
+  describe('calculateAreaBetweenPoints', () => {
+    it('returns the correct value', () => {
+      expect(calculateAreaBetweenPoints([7,3], [11,1])).toEqual(15);
+      expect(calculateAreaBetweenPoints([9,7], [9,5])).toEqual(3);
+      expect(calculateAreaBetweenPoints([9,5], [2,3])).toEqual(24);
+    })
+  });
   
   describe('isRedTile', () => {
     it('returns the correct value', () => {
@@ -26,19 +33,13 @@ describe("Advent of Code - Day 9", () => {
     });
   });
 
-  describe.only('isGreenTile', () => {
+  describe('isGreenTile', () => {
     it('returns the correct value', () => {
-      expect(isGreenTile(allCoords, [2,5])).toEqual(true);
+      expect(isGreenTile(allCoords, [2,1])).toEqual(false);
       expect(isGreenTile(allCoords, [9, 3])).toEqual(true);
     });
   });
 
-  describe('calculateMaxAreaWithinPerimeter', () => {
-
-    it('returns the correct value', () => {
-      expect(calculateMaxAreaWithinPerimeter(contents, allCoords, [7, 3])).toEqual(15);
-    });
-  });
 
   describe("partOne", () => {
     it("returns the correct value", () => {

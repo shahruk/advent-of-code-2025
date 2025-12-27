@@ -16,6 +16,22 @@ export const getTilePositions = (userInput: string): RedTilePositions => {
   Object.keys(results).forEach((key: string) => {
     results[parseInt(key)].sort((a: number, b: number) => a - b);
   });
+
+  // // Fill in the fences
+  // Object.keys(results).forEach(key => {
+  //   let previousIndex = results[parseInt(key)][0];
+  //   results[parseInt(key)] = results[parseInt(key)].reduce((acc: number[], value: number) => {
+  //     if (value !== previousIndex) {
+  //       for(let i = previousIndex + 1; i < value; i++) {
+  //         acc.push(i);
+  //       }
+  //     }
+  //     previousIndex = value;
+  //     acc.push(value);
+  //     return acc;
+  //   }, []);
+  // });
+
   return results;
 };
 
@@ -38,32 +54,66 @@ export const getHighestArea = (userInput: string): number => {
 };
 
 export const isGreenTile = (allCoords: RedTilePositions, corner: [number, number]): boolean => {
-  let topPoint: [number, number] = [corner[0], allCoords[corner[0]][0]];
-  let bottomPoint: [number, number] = [corner[0], allCoords[corner[0]][allCoords[corner[0]].length - 1]];
-  // let isValid = (isRedTile(allCoords, topPoint) || isGreenTile(allCoords, topPoint)) && (isRedTile(allCoords, bottomPoint) || isGreenTile(allCoords, bottomPoint));
-  return topPoint.length > 0 || bottomPoint.length > 0;
+  let leftSide = Object.keys(allCoords).filter((key) => parseInt(key) <= corner[0]);
+  let rightSide = Object.keys(allCoords).filter((key) => parseInt(key) >= corner[0]);
+  let hasTopLeft = ((): boolean => {
+    for (let xPoint of leftSide) {
+      if (allCoords[parseInt(xPoint)].filter((yPoint: number) => yPoint <= corner[1]).length > 0) return true;
+    }
+    return false;
+  })();
+  let hasBottomLeft = ((): boolean => {
+    for (let xPoint of leftSide) {
+      if (allCoords[parseInt(xPoint)].filter((yPoint: number) => yPoint >= corner[1]).length > 0) return true;
+    }
+    return false;
+  })();
+
+  let hasTopRight = ((): boolean => {
+    for (let xPoint of rightSide) {
+      if (allCoords[parseInt(xPoint)].filter((yPoint: number) => yPoint <= corner[1]).length > 0) return true;
+    }
+    return false;
+  })();
+  let hasBottomRight = ((): boolean => {
+    for (let xPoint of rightSide) {
+      if (allCoords[parseInt(xPoint)].filter((yPoint: number) => yPoint >= corner[1]).length > 0) return true;
+    }
+    return false;
+  })();
+
+  return hasTopLeft && hasTopRight && hasBottomLeft && hasBottomRight;
 };
 
 export const isRedTile = (allCoords: RedTilePositions, corner: [number, number]): boolean => {
   return allCoords[corner[0]].includes(corner[1]);
-}
+};
 
+export const calculateAreaBetweenPoints = (pointCoord: [number, number], pointCoord2: [number, number]): number => {
+  let xWidth = Math.abs(pointCoord[0] - pointCoord2[0]) + 1;
+  let yWidth = Math.abs(pointCoord[1] - pointCoord2[1]) + 1;
+  return xWidth * yWidth;
+};
 export const calculateMaxAreaWithinPerimeter = (
   contents: string[],
   allCoords: RedTilePositions,
   pointCoord: [number, number]
 ): number => {
   let result = 0;
+  console.log("allcoords", allCoords);
   contents.forEach((point2) => {
     // Determine if any points exist in between
     let pointCoord2 = pointToCoord(point2);
     let sortedCoords = [pointCoord, pointCoord2].sort((a: number[], b: number[]) => a[0] - b[0]);
-    console.log('sorted coords:', sortedCoords);
 
     let redOrGreenTilesOnly = () => {
-      let cornersOfInterest: [number, number][] = [[sortedCoords[0][0], sortedCoords[1][1]], [sortedCoords[1][0], sortedCoords[0][1]]];
-      let validCorners = cornersOfInterest.filter(corner => {
+      let cornersOfInterest: [number, number][] = [
+        [sortedCoords[0][0], sortedCoords[1][1]],
+        [sortedCoords[1][0], sortedCoords[0][1]],
+      ];
+      let validCorners = cornersOfInterest.filter((corner) => {
         let isRed = isRedTile(allCoords, corner);
+        console.log(corner, "isred:", isRed);
         if (isRed) return true;
         return isGreenTile(allCoords, corner);
       });
@@ -81,11 +131,10 @@ export const calculateMaxAreaWithinPerimeter = (
       });
       return yValues.length > 0;
     });
-    if (intersectingPoint.length > 0) console.log('Rejecting due to intersection', intersectingPoint);
+    if (intersectingPoint.length > 0) console.log("Rejecting due to intersection", intersectingPoint);
     if (intersectingPoint.length > 0) return;
-    let xWidth = Math.abs(pointCoord[0] - pointCoord2[0]) + 1;
-    let yWidth = Math.abs(pointCoord[1] - pointCoord2[1]) + 1;
-    let area = xWidth * yWidth;
+
+    let area = calculateAreaBetweenPoints(pointCoord, pointCoord2);
     console.log(sortedCoords, area);
     result = Math.max(result, area);
   });
