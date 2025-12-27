@@ -7,7 +7,7 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "lint": "eslint --check",
+    "lint": "eslint",
     "lint:fix": "eslint --fix .",
     "format": "prettier --write . && eslint --fix .",
     "format:check": "prettier --check .",
