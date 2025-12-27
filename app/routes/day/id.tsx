@@ -3,7 +3,7 @@ import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { SolutionArea } from "~/components/solution-area";
 import { puzzles } from "~/puzzles";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function PuzzleDayPage() {
   const { id } = useParams<{ id: string }>();
