@@ -24,7 +24,7 @@ export const SolutionArea = ({
       setError("");
       setAnswer(solutionHandler(userAnswer));
     } catch (e) {
-      console.error(e)
+      console.error(e);
       if (e instanceof Error) {
         setError(e.toString());
       } else {

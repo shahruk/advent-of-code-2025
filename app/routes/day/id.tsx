@@ -9,7 +9,7 @@ export default function PuzzleDayPage() {
   const { id } = useParams<{ id: string }>();
   let values: string[] = [];
   const puzzleData = puzzles[parseInt(id as string)];
-  puzzleData.forEach(puzzle => {
+  puzzleData.forEach((puzzle) => {
     values.push(puzzle.sampleInput);
   });
   const [userValues, setUserValues] = useState<string[]>(values);
@@ -55,13 +55,13 @@ export default function PuzzleDayPage() {
                   <SolutionArea
                     defaultValue={userValues[index]}
                     solutionHandler={puzzle.solution}
-                    onUserInputChanged={((value: string) => {
+                    onUserInputChanged={(value: string) => {
                       if (value) {
                         let newUserValues = [...userValues];
                         newUserValues[index] = value;
                         setUserValues(newUserValues);
                       }
-                    })}
+                    }}
                   />
                 </div>
               </TabsContent>

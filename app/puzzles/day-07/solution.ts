@@ -44,8 +44,8 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     };
   } = {
     1: {
-      [startingColumn]: 1
-    }
+      [startingColumn]: 1,
+    },
   };
 
   const markAncestorNodes = (
@@ -58,8 +58,10 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
       ancestorNodes[futureRow] = {};
     }
     if (!ancestorNodes[futureRow][futureColumn]) {
-      ancestorNodes[futureRow][futureColumn] = ancestorNodes[currentRow][currentColumn];
-      contents[futureRow] = contents[futureRow].substring(0, futureColumn) +
+      ancestorNodes[futureRow][futureColumn] =
+        ancestorNodes[currentRow][currentColumn];
+      contents[futureRow] =
+        contents[futureRow].substring(0, futureColumn) +
         "|" +
         contents[futureRow].substring(futureColumn + 1);
       let newPath = [futureColumn, futureRow];
@@ -69,7 +71,8 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
         nodesToExplore.push(newPath);
       }
     } else {
-      ancestorNodes[futureRow][futureColumn] += ancestorNodes[currentRow][currentColumn];
+      ancestorNodes[futureRow][futureColumn] +=
+        ancestorNodes[currentRow][currentColumn];
     }
   };
   while (nodesToExplore.length) {
@@ -83,13 +86,17 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     if (!contents[futureRow]) {
       continue;
     }
-    if (['.', '|'].includes(contents[futureRow][futureColumn])) markAncestorNodes(futureRow, futureColumn, row, column);
-    else if (contents[futureRow][futureColumn] === '^'){
+    if ([".", "|"].includes(contents[futureRow][futureColumn]))
+      markAncestorNodes(futureRow, futureColumn, row, column);
+    else if (contents[futureRow][futureColumn] === "^") {
       markAncestorNodes(futureRow, futureColumn - 1, row, column);
       markAncestorNodes(futureRow, futureColumn + 1, row, column);
     }
   }
 
-  result = Object.values(ancestorNodes[contents.length - 1]).reduce((acc: number, value: number) => acc += value, 0);
+  result = Object.values(ancestorNodes[contents.length - 1]).reduce(
+    (acc: number, value: number) => (acc += value),
+    0
+  );
   return { result, messages, benchmark: performance.now() - benchmark };
 };
