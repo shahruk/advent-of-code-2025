@@ -71,13 +71,15 @@ export const checkPointIsInShape = (
   point2: [number, number]
 ): boolean => {
   let [pointCoord, pointCoord2] = [point1, point2].sort((a, b) => a[0] - b[0]);
-  let [min, max] = allCoordsRange[pointCoord[0]];
-  if (pointCoord[1] < min || pointCoord[1] > max) return false;
-  if (pointCoord2[1] < min || pointCoord2[1] > max) return false;
+  for (let i = pointCoord[0]; i < pointCoord2[0]; i++) {
+    let [min, max] = allCoordsRange[i];
+    if (pointCoord[1] < min || pointCoord[1] > max) return false;
+    if (pointCoord2[1] < min || pointCoord2[1] > max) return false;
+  }
 
-  [min, max] = allCoordsRange[pointCoord2[0]];
-  if (pointCoord[1] < min || pointCoord[1] > max) return false;
-  if (pointCoord2[1] < min || pointCoord2[1] > max) return false;
+  // [min, max] = allCoordsRange[pointCoord2[0]];
+  // if (pointCoord[1] < min || pointCoord[1] > max) return false;
+  // if (pointCoord2[1] < min || pointCoord2[1] > max) return false;
   return true;
 };
 
