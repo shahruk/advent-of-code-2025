@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateAreaBetweenPoints,
-  calculateMaxAreaWithinPerimeter,
-  checkPointIsInShape,
+  checkIsValidRectangle,
   getColumnMinMax,
   getTilePositions,
-  isGreenTile,
-  isRedTile,
   partOne,
   partTwo,
 } from "./solution";
@@ -44,12 +41,14 @@ describe("Advent of Code - Day 9", () => {
     });
   });
 
-  describe("checkPointIsInShape", () => {
+  describe("checkIsValidRectangle", () => {
     it("returns the correct value", () => {
-      let isValid = checkPointIsInShape(getColumnMinMax(metadata[0].sampleInput), [11, 7], [2, 3]);
+      const allCoords = getTilePositions(metadata[0].sampleInput);
+      const allCoordsRange = getColumnMinMax(metadata[0].sampleInput);
+      let isValid = checkIsValidRectangle(allCoords, allCoordsRange, [11, 7], [2, 3]);
       expect(isValid).toEqual(false);
 
-      isValid = checkPointIsInShape(getColumnMinMax(metadata[0].sampleInput), [2, 3], [11, 7]);
+      isValid = checkIsValidRectangle(allCoords, allCoordsRange, [2, 3], [11, 7]);
       expect(isValid).toEqual(false);
     });
   });
@@ -59,13 +58,6 @@ describe("Advent of Code - Day 9", () => {
       expect(calculateAreaBetweenPoints([7, 3], [11, 1])).toEqual(15);
       expect(calculateAreaBetweenPoints([9, 7], [9, 5])).toEqual(3);
       expect(calculateAreaBetweenPoints([9, 5], [2, 3])).toEqual(24);
-    });
-  });
-
-  describe("isRedTile", () => {
-    it("returns the correct value", () => {
-      expect(isRedTile(allCoords, [9, 5])).toEqual(true);
-      expect(isRedTile(allCoords, [2, 3])).toEqual(true);
     });
   });
 
@@ -104,7 +96,7 @@ describe("Advent of Code - Day 9", () => {
         7,8
         5,8
         5,10
-        3,10`)
+        3,10`).result
       ).toEqual(35);
 
       expect(
@@ -125,8 +117,19 @@ describe("Advent of Code - Day 9", () => {
           6,12
           6,5
           3,5`
-        )
+        ).result
       ).toEqual(66);
+
+      expect(partTwo(
+        `0,0
+          0,1
+          2,1
+          2,3
+          0,3
+          0,4
+          3,4
+          3,0`)
+      .result).toEqual(8);
     });
   });
 });
