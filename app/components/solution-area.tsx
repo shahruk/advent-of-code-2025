@@ -62,7 +62,7 @@ export const SolutionArea = ({
             </div>
           )}
           <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black whitespace-break-spaces">
-            {answer.messages?.join("\n")}
+            {answer.messages?.map(line => <div>{ line }</div>)}
           </pre>
         </div>
       )}
