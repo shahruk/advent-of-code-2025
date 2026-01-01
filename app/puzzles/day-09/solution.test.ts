@@ -4,8 +4,10 @@ import {
   drawGrid,
   getGreenTilePositions,
   getRedTilePositions,
+  isAllGreenOrRed,
   isGreenTile,
   isIntersected,
+  isRedTile,
   isWithinPerimeter,
   partOne,
   partTwo,
@@ -55,7 +57,6 @@ describe("Advent of Code - Day 9", () => {
           let redTilePositions = getRedTilePositions(input);
           let point1: [number, number] = [ 4, 2 ];
           let point2: [number, number] = [ 11, 10 ] ;
-        console.log(drawGrid(input))
       expect(isIntersected(point1, point2, redTilePositions)).toEqual(true);
     })
   })
@@ -63,11 +64,87 @@ describe("Advent of Code - Day 9", () => {
     describe('isGreenTile', () => {
       const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);
       it('returns the correct value', () => {
-        console.log(greenTilePositions[0], greenTilePositions[1]);
         expect(isGreenTile(greenTilePositions, [ 9, 3 ])).toEqual(true);
       });
+
+      it('returns the correct value', () => {
+        const input = `3,2
+          17,2
+          17,13
+          13,13
+          13,11
+          15,11
+          15,8
+          11,8
+          11,15
+          18,15
+          18,17
+          4,17
+          4,12
+          6,12
+          6,5
+          3,5`;
+        const greenTilePositions = getGreenTilePositions(input);
+          console.log(drawGrid(input, [12, 12]).join('\n'))
+          expect(isGreenTile(greenTilePositions, [12, 12])).toEqual(false);
+      })
     });
 
+    describe('isRedTile', () => {
+      it('returns the correct values', () => {
+        let input = `3,2
+          17,2
+          17,13
+          13,13
+          13,11
+          15,11
+          15,8
+          11,8
+          11,15
+          18,15
+          18,17
+          4,17
+          4,12
+          6,12
+          6,5
+          3,5`;
+        const redTilePositions = getRedTilePositions(input);
+        expect(isRedTile([12, 12], redTilePositions)).toEqual(false);
+      });
+    })
+
+    describe('isAllGreenOrRed', () => {
+      it('returns the correct value', () => {
+        const redTilePositions = getRedTilePositions(metadata[0].sampleInput);
+        const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);
+        expect(isAllGreenOrRed([11,1], [2,5], redTilePositions, greenTilePositions)).toEqual(false);
+        expect(isAllGreenOrRed([11,1], [2,3], redTilePositions, greenTilePositions)).toEqual(false);
+      });
+
+      it('returns the correct value', () => {
+        let input = `3,2
+          17,2
+          17,13
+          13,13
+          13,11
+          15,11
+          15,8
+          11,8
+          11,15
+          18,15
+          18,17
+          4,17
+          4,12
+          6,12
+          6,5
+          3,5`;
+        const redTilePositions = getRedTilePositions(input);
+        const greenTilePositions = getGreenTilePositions(input);
+        console.log(drawGrid(input, [12, 12]).join('\n'));
+        expect(isGreenTile(greenTilePositions, [12, 12])).toEqual(false);
+        expect(isAllGreenOrRed([17,2], [6,12], redTilePositions, greenTilePositions)).toBe(false);
+      })
+    })
   describe("isWithinPerimeter", () => {
     const redTilePositions = getRedTilePositions(metadata[0].sampleInput);
     const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);2
@@ -83,7 +160,7 @@ describe("Advent of Code - Day 9", () => {
     });
   });
 
-  describe.only("partTwo", () => {
+  describe("partTwo", () => {
     it("returns the correct value", () => {
       drawGrid(metadata[0].sampleInput);
       expect(partTwo(metadata[0].sampleInput).result).toEqual(24);
@@ -116,24 +193,6 @@ describe("Advent of Code - Day 9", () => {
         3,10`).result
       ).toEqual(35);
 
-      console.log(
-        drawGrid(`3,2
-          17,2
-          17,13
-          13,13
-          13,11
-          15,11
-          15,8
-          11,8
-          11,15
-          18,15
-          18,17
-          4,17
-          4,12
-          6,12
-          6,5
-          3,5`).join("\n")
-      );
       expect(
         partTwo(
           `3,2
