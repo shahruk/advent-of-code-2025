@@ -12,6 +12,37 @@ import {
 } from "./solution";
 import metadata from ".";
 
+const hShape = `1,0
+3,0
+3,6
+16,6
+16,0
+18,0
+18,9
+13,9
+13,7
+6,7
+6,9
+1,9`;
+const lShape = `1,1
+    8,1
+    8,3
+    3,3
+    3,4
+    8,4
+    8,9
+    18,9
+    18,11
+    5,11
+    5,9
+    4,9
+    4,11
+    1,11
+    1,7
+    6,7
+    6,6
+    1,6`;
+
 describe("Advent of Code - Day 9", () => {
   describe("getRedTilePositions", () => {
     it("returns the correct value", () => {
@@ -39,40 +70,57 @@ describe("Advent of Code - Day 9", () => {
         9: [[5, 7]],
         11: [[1, 7]],
       });
+
+      expect(getGreenTilePositions(hShape)[1][0]).toEqual([
+        [1, 3],
+        [16, 18],
+      ]);
+    });
+
+    it("merges adjacent pairs", () => {
+      console.log(getGreenTilePositions(lShape)[1]);
+      expect(getGreenTilePositions(lShape)[0]).toEqual({
+        "1": [
+          [1, 6],
+          [7, 11],
+        ],
+        "3": [[3, 4]],
+        "4": [[9, 11]],
+        "5": [[9, 11]],
+        "6": [[6, 7]],
+        "8": [
+          [1, 3],
+          [4, 9],
+        ],
+        "18": [[9, 11]],
+      });
+
+      expect(getGreenTilePositions(lShape)[1]).toEqual({
+        "1": [[1, 8]],
+        "3": [[3, 8]],
+        "4": [[3, 8]],
+        "6": [[1, 6]],
+        "7": [[1, 6]],
+        "9": [
+          [4, 5],
+          [8, 18],
+        ],
+        "11": [
+          [1, 4],
+          [5, 18],
+        ],
+      });
     });
   });
 
-    describe('isGreenTile', () => {
-      const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);
-      it('returns the correct value', () => {
-        expect(isGreenTile(greenTilePositions, [ 9, 3 ])).toEqual(true);
-      });
-
-      it('returns the correct value', () => {
-        const input = `3,2
-          17,2
-          17,13
-          13,13
-          13,11
-          15,11
-          15,8
-          11,8
-          11,15
-          18,15
-          18,17
-          4,17
-          4,12
-          6,12
-          6,5
-          3,5`;
-        const greenTilePositions = getGreenTilePositions(input);
-          expect(isGreenTile(greenTilePositions, [12, 12])).toEqual(false);
-      })
+  describe("isGreenTile", () => {
+    const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);
+    it("returns the correct value", () => {
+      expect(isGreenTile(greenTilePositions, [9, 3])).toEqual(true);
     });
 
-    describe('isRedTile', () => {
-      it('returns the correct values', () => {
-        let input = `3,2
+    it("returns the correct value", () => {
+      const input = `3,2
           17,2
           17,13
           13,13
@@ -88,21 +136,14 @@ describe("Advent of Code - Day 9", () => {
           6,12
           6,5
           3,5`;
-        const redTilePositions = getRedTilePositions(input);
-        expect(isRedTile([12, 12], redTilePositions)).toEqual(false);
-      });
-    })
+      const greenTilePositions = getGreenTilePositions(input);
+      expect(isGreenTile(greenTilePositions, [12, 12])).toEqual(false);
+    });
+  });
 
-    describe('isAllGreenOrRed', () => {
-      it('returns the correct value', () => {
-        const redTilePositions = getRedTilePositions(metadata[0].sampleInput);
-        const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);
-        expect(isAllGreenOrRed([11,1], [2,5], redTilePositions, greenTilePositions)).toEqual(false);
-        expect(isAllGreenOrRed([11,1], [2,3], redTilePositions, greenTilePositions)).toEqual(false);
-      });
-
-      it('returns the correct value', () => {
-        let input = `3,2
+  describe("isRedTile", () => {
+    it("returns the correct values", () => {
+      let input = `3,2
           17,2
           17,13
           13,13
@@ -118,12 +159,42 @@ describe("Advent of Code - Day 9", () => {
           6,12
           6,5
           3,5`;
-        const redTilePositions = getRedTilePositions(input);
-        const greenTilePositions = getGreenTilePositions(input);
-        expect(isGreenTile(greenTilePositions, [12, 12])).toEqual(false);
-        expect(isAllGreenOrRed([17,2], [6,12], redTilePositions, greenTilePositions)).toBe(false);
-      })
-    })
+      const redTilePositions = getRedTilePositions(input);
+      expect(isRedTile([12, 12], redTilePositions)).toEqual(false);
+    });
+  });
+
+  describe("isAllGreenOrRed", () => {
+    it("returns the correct value", () => {
+      const redTilePositions = getRedTilePositions(metadata[0].sampleInput);
+      const greenTilePositions = getGreenTilePositions(metadata[0].sampleInput);
+      expect(isAllGreenOrRed([11, 1], [2, 5], redTilePositions, greenTilePositions)).toEqual(false);
+      expect(isAllGreenOrRed([11, 1], [2, 3], redTilePositions, greenTilePositions)).toEqual(false);
+    });
+
+    it("returns the correct value", () => {
+      let input = `3,2
+          17,2
+          17,13
+          13,13
+          13,11
+          15,11
+          15,8
+          11,8
+          11,15
+          18,15
+          18,17
+          4,17
+          4,12
+          6,12
+          6,5
+          3,5`;
+      const redTilePositions = getRedTilePositions(input);
+      const greenTilePositions = getGreenTilePositions(input);
+      expect(isGreenTile(greenTilePositions, [12, 12])).toEqual(false);
+      expect(isAllGreenOrRed([17, 2], [6, 12], redTilePositions, greenTilePositions)).toBe(false);
+    });
+  });
 
   describe("partOne", () => {
     it("returns the correct value", () => {
@@ -183,23 +254,47 @@ describe("Advent of Code - Day 9", () => {
           3,5`
         ).result
       ).toEqual(66);
+
+      // https://www.reddit.com/r/adventofcode/comments/1pi5rqn/2025_day_9_part_2_check_your_solution_with_this/
+
+      expect(partTwo(hShape).result).toEqual(30);
+      expect(partTwo(lShape).result).toEqual(88);
     });
 
-    // it('returns the correct value', () => {
-    //   const input = `0,0
-    //       0,1
-    //       2,1
-    //       2,3
-    //       0,3
-    //       0,4
-    //       3,4
-    //       3,0`;
-    //   console.log(drawGrid(input).join('\n'))
-    //   expect(
-    //     partTwo(
-    //       input
-    //     ).result
-    //   ).toEqual(8);
-    // });
+        expect(
+          partTwo(`1,5
+    3,5
+    3,8
+    7,8
+    7,5
+    9,5
+    9,10
+    11,10
+    11,3
+    6,3
+    6,7
+    4,7
+    4,1
+    13,1
+    13,12
+    1,12`).result
+        ).toEqual(72);
+
+    it('returns the correct value', () => {
+      const input = `0,0
+          0,1
+          2,1
+          2,3
+          0,3
+          0,4
+          3,4
+          3,0`;
+      console.log(drawGrid(input).join('\n'))
+      expect(
+        partTwo(
+          input
+        ).result
+      ).toEqual(8);
+    });
   });
 });

@@ -36,14 +36,14 @@ export const getGreenTilePositions = (userInput: string): [GreenTilePositionRang
   Object.keys(redXCoords)
     .filter((key) => redXCoords[parseInt(key)].length > 1)
     .forEach((key) => {
-      let yPointToBridge: number;
       let colData = redXCoords[parseInt(key)];
       let ranges: [number, number][] = [];
+      let newPoint: number[] = [];
       colData.forEach((y) => {
-        if (yPointToBridge) {
-          ranges.push([yPointToBridge, y]);
-        } else {
-          yPointToBridge = y;
+        newPoint.push(y);
+        if (newPoint.length === 2) {
+          ranges.push(newPoint as [number, number]);
+          newPoint = [];
         }
       });
       xResults[parseInt(key)] = ranges;
@@ -53,14 +53,14 @@ export const getGreenTilePositions = (userInput: string): [GreenTilePositionRang
   Object.keys(redYCoords)
     .filter((key) => redYCoords[parseInt(key)].length > 1)
     .forEach((key) => {
-      let xPointToBridge: number;
       let colData = redYCoords[parseInt(key)];
       let ranges: [number, number][] = [];
+      let newPoint: number[] = [];
       colData.forEach((x) => {
-        if (xPointToBridge) {
-          ranges.push([xPointToBridge, x]);
-        } else {
-          xPointToBridge = x;
+        newPoint.push(x);
+        if (newPoint.length === 2) {
+          ranges.push(newPoint as [number, number]);
+          newPoint = [];
         }
       });
       yResults[parseInt(key)] = ranges;
@@ -162,15 +162,20 @@ export const isGreenTile = (
     return found;
   };
 
-  let isEnclosed = hasLeftEdge() > 1 && hasRightEdge() > 1 && hasTopEdge() > 1 && hasBottomEdge() > 1;
-  return !isEnclosed && hasLeftEdge() > 0 && hasRightEdge() > 0 && hasTopEdge() > 0 && hasBottomEdge() > 0;
+  let leftEdgeCount = hasLeftEdge();
+  let rightEdgeCount = hasRightEdge();
+  let topEdgeCount = hasTopEdge();
+  let bottomEdgeCount = hasBottomEdge();
+  
+  let isEnclosed = leftEdgeCount > 1 && rightEdgeCount > 1 && topEdgeCount > 1 && bottomEdgeCount > 1;
+  return !isEnclosed && leftEdgeCount > 0 && rightEdgeCount > 0 && topEdgeCount > 0 && bottomEdgeCount > 0;
 };
 
 export const isTileValid = (
   line: [number, number],
   redTilePositions: [TilePositions, TilePositions],
   greenTilePositions: [GreenTilePositionRanges, GreenTilePositionRanges],
-  knownTiles: { [key: string]: boolean }
+  knownTiles: { [key: string]: boolean } = {}
 ) => {
   if (knownTiles[`${line}`]) return knownTiles[`${line}`];
   let result = isRedTile(line, redTilePositions) || isGreenTile(greenTilePositions, line);
@@ -186,24 +191,82 @@ export const isAllGreenOrRed = (
   knownTiles: { [key: string]: boolean } = {}
 ): boolean => {
   let [redXCoords] = redTilePositions;
+  const [greenXCoords, greenYCoords] = greenTilePositions;
   let coords = [pointCoord, pointCoord2];
   let [[minX], [maxX]] = coords.sort((a, b) => a[0] - b[0]);
   let [[_x1, minY], [_x2, maxY]] = coords.sort((a, b) => a[1] - b[1]);
-
+  console.log('evaluating:', coords, calculateAreaBetweenPoints(pointCoord, pointCoord2));
   let corners: [number, number][] = [
     [minX, minY],
     [maxX, minY],
     [maxX, maxY],
     [minX, maxY],
   ];
-  let redTilesWithin = Object.keys(redXCoords)
-    .filter((key) => parseInt(key) > minX && parseInt(key) < maxX)
-    .map((key) => redXCoords[parseInt(key)].filter((yKey) => yKey > minY && yKey < maxY))
-    .filter((item) => item.length > 0);
-  if (redTilesWithin.length > 0) return false;
+  // let redTilesWithin = Object.keys(redXCoords)
+  //   .filter((key) => parseInt(key) > minX && parseInt(key) < maxX)
+  //   .map((key) => redXCoords[parseInt(key)].filter((yKey) => yKey > minY && yKey < maxY))
+  //   .filter((item) => item.length > 0);
+  // if (redTilesWithin.length > 0) return false;
   for (let corner of corners) {
-    if (!isTileValid(corner, redTilePositions, greenTilePositions, knownTiles)) return false;
+    if (!isTileValid(corner, redTilePositions, greenTilePositions, {})) {
+      console.log('not valid', corners);
+      return false;
+    }
   }
+  for(let i = minX; i <= maxX; i++) {
+    let isValid = isTileValid([i, minY], redTilePositions, greenTilePositions);
+    if (!isValid) return false;
+    isValid = isTileValid([i, maxY], redTilePositions, greenTilePositions);
+    if (!isValid) return false;
+  }
+
+  for(let i = minY; i <= maxY; i++) {
+    let isValid = isTileValid([minX, i], redTilePositions, greenTilePositions);
+    if (!isValid) return false;
+    isValid = isTileValid([maxX, i], redTilePositions, greenTilePositions);
+    if (!isValid) return false;
+  }
+  // let innerRows = Object.keys(greenYCoords).filter(key => parseInt(key) >= minY && parseInt(key) <= maxY);
+  // for(let row of innerRows) {
+  //   let rowGap: [number?, number?] = [];
+  //   let values = greenYCoords[parseInt(row)];
+  //   for(let xCoord of values) {
+  //     console.log(coords, row, xCoord)
+  //     if (!(xCoord[0] <= minX && xCoord[1] >= maxX)) return false;
+      // if (xCoord[0] > minX && xCoord[1] < maxX) {
+      //   console.log('not valid because a new min/max range was found on row:',row, xCoord, minX, maxX)
+      //   return false;
+      // }
+      // if (!rowGap[0]) {
+      //   rowGap[0] = xCoord[1];
+      // } else if (!rowGap[1]) {
+      //   rowGap[1] = xCoord[0];
+      //   let isBreak = (rowGap[0] && rowGap[1] && rowGap[0] >= minX && rowGap[1] <= maxX);
+      //   if (isBreak) {
+      //     console.log('A break was found between the ranges, returning false!', rowGap);
+      //     return false;
+      //   }
+      //   rowGap = [];
+      // }
+    // }
+  // }
+2
+
+  // Check for a gap in the green tiles
+  // Is there a horizontal range with a gap between these X values
+  // let innerRows = Object.keys(greenYCoords).filter(key => parseInt(key) > minY && parseInt(key) < maxY);
+  // let innerColumnGaps = innerRows.map(key => greenYCoords[parseInt(key)].filter(xRange => xRange[0] > minX && xRange[0] < maxX)).filter(row => row.length > 0);
+  // let isInnerHorizontalGap = innerColumnGaps.filter(column => column.length > 0).length > 0;
+  // console.log('Are we about to reject', pointCoord, pointCoord2, '?:', isInnerHorizontalGap, 'corners:', corners,'greenYCoords:', greenYCoords, innerRows.map(rowKey => greenYCoords[parseInt(rowKey)]), 'innerColGaps:', innerColumnGaps, calculateAreaBetweenPoints(pointCoord, pointCoord2));
+  // if (isInnerHorizontalGap) return false;
+  // // Is there a vertical range with a gap between these Y values
+  
+  // let innerCols = Object.keys(greenXCoords).filter(key => parseInt(key) > minX && parseInt(key) < maxX);
+  // let innerRowGaps = innerCols.map(key => greenXCoords[parseInt(key)].filter(yRange => yRange[0] <= minY && yRange[0] >= maxY)).filter(col => col.length === 0);
+  // let isInnerVerticalGap = innerRowGaps.filter(row => row.length > 0).length > 0;
+  // if (isInnerVerticalGap) return false;
+
+  // console.log('corners:', corners,'greenYCoords:', greenYCoords, innerRows.map(rowKey => greenYCoords[parseInt(rowKey)]), 'innerColGaps:', innerColumnGaps, 'innerRowGaps:', innerRowGaps);
   return true;
 };
 
@@ -221,7 +284,7 @@ export const getHighestAreaWithinPerimeter = (userInput: string): number => {
       let pointCoord2 = pointToCoord(point2);
       let area = calculateAreaBetweenPoints(pointCoord, pointCoord2);
       areaResults.push([pointCoord, pointCoord2, area]);
-      result = Math.max(result, area);
+      // result = Math.max(result, area);
     });
     visited[point] = true;
   });
@@ -230,12 +293,15 @@ export const getHighestAreaWithinPerimeter = (userInput: string): number => {
   let knownTiles = {};
   for (let result of areaResults) {
     let [pointCoord, pointCoord2, area] = result;
-    if (isAllGreenOrRed(pointCoord, pointCoord2, redTilePositions, greenTilePositions, knownTiles)) {
+    let allValid = isAllGreenOrRed(pointCoord, pointCoord2, redTilePositions, greenTilePositions, knownTiles);
+    if (allValid) {
+      console.log('>>>>>>> Valid <<<<<<<', result, allValid)
       return area;
     }
   }
+  return 0;
 
-  return result;
+  // return result;
 };
 
 export const partOne = (userInput: string): PuzzleSolutionMetadata => {
