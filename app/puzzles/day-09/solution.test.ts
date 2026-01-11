@@ -261,8 +261,8 @@ describe("Advent of Code - Day 9", () => {
       expect(partTwo(lShape).result).toEqual(88);
     });
 
-        expect(
-          partTwo(`1,5
+    expect(
+      partTwo(`1,5
     3,5
     3,8
     7,8
@@ -278,9 +278,9 @@ describe("Advent of Code - Day 9", () => {
     13,1
     13,12
     1,12`).result
-        ).toEqual(72);
+    ).toEqual(72);
 
-    it('returns the correct value', () => {
+    it("returns the correct value", () => {
       const input = `0,0
           0,1
           2,1
@@ -289,12 +289,17 @@ describe("Advent of Code - Day 9", () => {
           0,4
           3,4
           3,0`;
-      console.log(drawGrid(input).join('\n'))
-      expect(
-        partTwo(
-          input
-        ).result
-      ).toEqual(8);
+      console.log(drawGrid(input).join("\n"));
+      expect(partTwo(input).result).toEqual(8);
+    });
+
+    it("handles large ranges", () => {
+      const input = `0,0
+      0,10000000
+      10000000,0
+      999999999999910000000,0
+      10000000,10000000`;
+      expect(partTwo(input).result).toEqual(100000020000001);
     });
   });
 });
