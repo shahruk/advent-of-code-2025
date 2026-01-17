@@ -2,25 +2,18 @@ import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
 export const calculateNumericalRotation = (movementString: string): number => {
-  const negativeOrPositiveMultiplier =
-    movementString.substring(0, 1) === "L" ? -1 : 1;
+  const negativeOrPositiveMultiplier = movementString.substring(0, 1) === "L" ? -1 : 1;
   return negativeOrPositiveMultiplier * parseInt(movementString.substring(1));
 };
 
-export const calculateNewPositionWithRotation = (
-  position: number,
-  movement: number
-): number => {
+export const calculateNewPositionWithRotation = (position: number, movement: number): number => {
   let newPosition = position + (movement % 100);
   if (newPosition < 0) newPosition = 100 + newPosition;
   else if (newPosition >= 100) newPosition = newPosition % 100;
   return newPosition;
 };
 
-export const calculateFullRotationCount = (
-  position: number,
-  movement: number
-): number => {
+export const calculateFullRotationCount = (position: number, movement: number): number => {
   let result = Math.floor(Math.abs(movement) / 100);
   const remainder = Math.abs(movement) % 100;
   if (position === 0) return result;
@@ -43,13 +36,8 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
   messages.push(`The dial starts by pointing at ${currentDialPosition}.`);
   contents.forEach((line) => {
     const movement = calculateNumericalRotation(line);
-    currentDialPosition = calculateNewPositionWithRotation(
-      currentDialPosition,
-      movement
-    );
-    messages.push(
-      `The dial is rotated ${movement} to point at ${currentDialPosition}.`
-    );
+    currentDialPosition = calculateNewPositionWithRotation(currentDialPosition, movement);
+    messages.push(`The dial is rotated ${movement} to point at ${currentDialPosition}.`);
     if (currentDialPosition === 0) result++;
   });
   return { result, messages, benchmark: performance.now() - benchmark };
@@ -64,14 +52,8 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   messages.push(`The dial starts by pointing at ${currentDialPosition}.`);
   contents.forEach((line) => {
     const movement = calculateNumericalRotation(line);
-    const rotationCount = calculateFullRotationCount(
-      currentDialPosition,
-      movement
-    );
-    currentDialPosition = calculateNewPositionWithRotation(
-      currentDialPosition,
-      movement
-    );
+    const rotationCount = calculateFullRotationCount(currentDialPosition, movement);
+    currentDialPosition = calculateNewPositionWithRotation(currentDialPosition, movement);
     result += rotationCount;
     let message = `The dial is rotated ${movement} to point at ${currentDialPosition}${rotationCount === 0 ? "." : "; "}`;
     if (rotationCount > 0) {

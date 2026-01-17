@@ -55,8 +55,8 @@ const lShape = `1,1
     1,6`;
 
 describe("Advent of Code - Day 9", () => {
-  describe('drawGrid', () => {
-    it.only('returns the correct value', () => {
+  describe("drawGrid", () => {
+    it.only("returns the correct value", () => {
       const outerRectangle = `
 1,0
 18,0
@@ -64,19 +64,19 @@ describe("Advent of Code - Day 9", () => {
 1,9
 1,0`;
 
-const innerRectangle = `
+      const innerRectangle = `
 3,2
 16,2
 16,7
 3,7
 3,2`;
-console.log(drawGrid(outerRectangle));
-console.log(drawGrid(innerRectangle));
+      console.log(drawGrid(outerRectangle));
+      console.log(drawGrid(innerRectangle));
       console.log(drawGrid(doubleSquare));
       const redTilePositions = getRedTilePositions(doubleSquare);
       const greenTilePositions = getGreenTilePositions(doubleSquare);
       expect(isAllGreenOrRed([1, 0], [18, 11], redTilePositions, greenTilePositions)).toEqual(false);
-    })
+    });
   });
   describe("getRedTilePositions", () => {
     it("returns the correct value", () => {

@@ -11,10 +11,7 @@ export const findInvalidId = (inputs: string): number[] => {
   let firstNum = parseFloat(stringPair[0]);
   let lastNum = parseFloat(stringPair[1]);
   // If both odd and the range is the same
-  if (
-    stringPair[0].length % 2 != 0 &&
-    stringPair[0].length === stringPair[1].length
-  ) {
+  if (stringPair[0].length % 2 != 0 && stringPair[0].length === stringPair[1].length) {
     return result;
   }
   for (let i = firstNum; i <= lastNum; i++) {
@@ -45,10 +42,7 @@ export const findInvalidIdWithMultiples = (inputs: string): number[] => {
         for (let k = 0; k < numberString.length; k += j) {
           strings.push(numberString.substring(k, k + j));
         }
-        if (
-          strings.length > 1 &&
-          strings.filter((str) => str === strings[0]).length === strings.length
-        ) {
+        if (strings.length > 1 && strings.filter((str) => str === strings[0]).length === strings.length) {
           isRepeatingSequence = true;
         }
         if (isRepeatingSequence && !result.includes(i)) result.push(i);
@@ -67,9 +61,7 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
     let invalids = findInvalidId(pair);
     if (invalids.length) {
       result += invalids.reduce((acc, val) => acc + val, 0);
-      messages.push(
-        `${pair} has ${invalids.length} invalid IDs, ${invalids.join(" and ")}.`
-      );
+      messages.push(`${pair} has ${invalids.length} invalid IDs, ${invalids.join(" and ")}.`);
     } else {
       messages.push(`${pair} contains no invalid IDs.`);
     }
@@ -86,9 +78,7 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     let invalids = findInvalidIdWithMultiples(pair);
     if (invalids.length) {
       result += invalids.reduce((acc, val) => acc + val, 0);
-      messages.push(
-        `${pair} has ${invalids.length} invalid IDs, ${invalids.join(" and ")}.`
-      );
+      messages.push(`${pair} has ${invalids.length} invalid IDs, ${invalids.join(" and ")}.`);
     } else {
       messages.push(`${pair} contains no invalid IDs.`);
     }

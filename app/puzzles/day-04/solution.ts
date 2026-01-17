@@ -1,10 +1,7 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
-export const findAccessibleWithForklift = (
-  input: string[],
-  row: number
-): number[] => {
+export const findAccessibleWithForklift = (input: string[], row: number): number[] => {
   let result = [];
   let positions = [-1, 0, 1];
   for (let i = 0; i < input[row].length; i++) {
@@ -68,13 +65,9 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
       positionsMoved += markedResults.length;
       markedResults.forEach((column) => {
         futureContents[index] =
-          futureContents[index].substring(0, column) +
-          "." +
-          futureContents[index].substring(column + 1);
+          futureContents[index].substring(0, column) + "." + futureContents[index].substring(column + 1);
         userMessageContents[index] =
-          userMessageContents[index].substring(0, column) +
-          "x" +
-          userMessageContents[index].substring(column + 1);
+          userMessageContents[index].substring(0, column) + "x" + userMessageContents[index].substring(column + 1);
       });
     });
 

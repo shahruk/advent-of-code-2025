@@ -16,10 +16,7 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
       continue;
     }
     if (contents[row][column] === ".") {
-      contents[row] =
-        contents[row].substring(0, column) +
-        "|" +
-        contents[row].substring(column + 1);
+      contents[row] = contents[row].substring(0, column) + "|" + contents[row].substring(column + 1);
       allBeamPositions.push([column, row + 1]);
     } else if (contents[row][column] === "^") {
       result++;
@@ -48,22 +45,14 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     },
   };
 
-  const markAncestorNodes = (
-    futureRow: number,
-    futureColumn: number,
-    currentRow: number,
-    currentColumn: number
-  ) => {
+  const markAncestorNodes = (futureRow: number, futureColumn: number, currentRow: number, currentColumn: number) => {
     if (!ancestorNodes[futureRow]) {
       ancestorNodes[futureRow] = {};
     }
     if (!ancestorNodes[futureRow][futureColumn]) {
-      ancestorNodes[futureRow][futureColumn] =
-        ancestorNodes[currentRow][currentColumn];
+      ancestorNodes[futureRow][futureColumn] = ancestorNodes[currentRow][currentColumn];
       contents[futureRow] =
-        contents[futureRow].substring(0, futureColumn) +
-        "|" +
-        contents[futureRow].substring(futureColumn + 1);
+        contents[futureRow].substring(0, futureColumn) + "|" + contents[futureRow].substring(futureColumn + 1);
       let newPath = [futureColumn, futureRow];
       if (futureRow === currentRow) {
         nodesToExplore.unshift(newPath);
@@ -71,8 +60,7 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
         nodesToExplore.push(newPath);
       }
     } else {
-      ancestorNodes[futureRow][futureColumn] +=
-        ancestorNodes[currentRow][currentColumn];
+      ancestorNodes[futureRow][futureColumn] += ancestorNodes[currentRow][currentColumn];
     }
   };
   while (nodesToExplore.length) {
@@ -86,17 +74,13 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     if (!contents[futureRow]) {
       continue;
     }
-    if ([".", "|"].includes(contents[futureRow][futureColumn]))
-      markAncestorNodes(futureRow, futureColumn, row, column);
+    if ([".", "|"].includes(contents[futureRow][futureColumn])) markAncestorNodes(futureRow, futureColumn, row, column);
     else if (contents[futureRow][futureColumn] === "^") {
       markAncestorNodes(futureRow, futureColumn - 1, row, column);
       markAncestorNodes(futureRow, futureColumn + 1, row, column);
     }
   }
 
-  result = Object.values(ancestorNodes[contents.length - 1]).reduce(
-    (acc: number, value: number) => (acc += value),
-    0
-  );
+  result = Object.values(ancestorNodes[contents.length - 1]).reduce((acc: number, value: number) => (acc += value), 0);
   return { result, messages, benchmark: performance.now() - benchmark };
 };

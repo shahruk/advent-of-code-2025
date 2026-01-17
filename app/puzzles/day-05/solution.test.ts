@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  flattenAllRanges,
-  flattenRange,
-  isOverlappingRange,
-  parsePuzzleInput,
-  partOne,
-  partTwo,
-} from "./solution";
+import { flattenAllRanges, flattenRange, isOverlappingRange, parsePuzzleInput, partOne, partTwo } from "./solution";
 import metadata, { sampleInput } from ".";
 
 describe("Advent of Code - Day 5", () => {

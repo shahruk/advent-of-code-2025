@@ -1,27 +1,19 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
-export const parsePuzzleInput = (
-  userInput: string
-): [[number, number][], number[]] => {
+export const parsePuzzleInput = (userInput: string): [[number, number][], number[]] => {
   let splitInputs = splitUserInputByCharacter(userInput, "\n\n");
   let cleanedRanges = flattenAllRanges(
     splitUserInputByCharacter(splitInputs[0]).map(
-      (row) =>
-        row.split("-").map((range) => parseInt(range)) as [number, number]
+      (row) => row.split("-").map((range) => parseInt(range)) as [number, number]
     )
   );
-  let cleanedNumbers = splitUserInputByCharacter(splitInputs[1]).map((row) =>
-    parseInt(row)
-  );
+  let cleanedNumbers = splitUserInputByCharacter(splitInputs[1]).map((row) => parseInt(row));
 
   return [cleanedRanges, cleanedNumbers];
 };
 
-export const isOverlappingRange = (
-  range1: [number, number],
-  range2: number[]
-): boolean => {
+export const isOverlappingRange = (range1: [number, number], range2: number[]): boolean => {
   if (!(range1 && range2)) {
     return false;
   }
@@ -29,18 +21,13 @@ export const isOverlappingRange = (
   return !(range2[1] < range1[0] || range2[0] > range1[1]);
 };
 
-export const flattenRange = (
-  range1: [number, number],
-  range2: [number, number]
-): [number, number] => {
+export const flattenRange = (range1: [number, number], range2: [number, number]): [number, number] => {
   let min = Math.min(range1[0], range2[0]);
   let max = Math.max(range1[1], range2[1]);
   return [min, max];
 };
 
-export const flattenAllRanges = (
-  ranges: [number, number][]
-): [number, number][] => {
+export const flattenAllRanges = (ranges: [number, number][]): [number, number][] => {
   let results: [number, number][] = [];
   for (let i = 0; i < ranges.length; i++) {
     let overflowsFound = [];

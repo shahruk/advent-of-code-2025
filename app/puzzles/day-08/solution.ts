@@ -1,10 +1,7 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
-export const findEuclidianDistance = (
-  point1: string,
-  point2: string
-): number => {
+export const findEuclidianDistance = (point1: string, point2: string): number => {
   let numbersPoint1 = point1.split(",").map((val) => parseInt(val));
   let numbersPoint2 = point2.split(",").map((val) => parseInt(val));
   return Math.sqrt(
@@ -67,19 +64,13 @@ export const getCircuits = (contents: string[], connectionCount = 1000) => {
   return circuits;
 };
 
-export const getFullCircuit = (
-  contents: string[]
-): [{ [key: string]: string[] }, JunctionPair] => {
+export const getFullCircuit = (contents: string[]): [{ [key: string]: string[] }, JunctionPair] => {
   let closestPairs: JunctionPair[] = getClosestPairs(contents);
-  let circuits: { [key: string]: string[] } = contents.reduce(
-    (acc: { [key: string]: string[] }, curr: string) => {
-      acc[curr] = [curr];
-      return acc;
-    },
-    {}
-  );
-  let circuitReferenceMap: { [key: string]: { id: string; pointer: string } } =
-    {};
+  let circuits: { [key: string]: string[] } = contents.reduce((acc: { [key: string]: string[] }, curr: string) => {
+    acc[curr] = [curr];
+    return acc;
+  }, {});
+  let circuitReferenceMap: { [key: string]: { id: string; pointer: string } } = {};
   let lastPair = closestPairs[0];
   // let objectKeys = Object.keys(circuits).length;
   // let objectValues = Object.values(circuits)[0];
@@ -99,63 +90,45 @@ export const getFullCircuit = (
           pointer: nextPair[1],
         };
       let rootInsert = nextPair[0];
-      while (
-        circuitReferenceMap[rootInsert].pointer !==
-        circuitReferenceMap[rootInsert].id
-      ) {
-        circuitReferenceMap[rootInsert].pointer =
-          circuitReferenceMap[circuitReferenceMap[rootInsert].pointer].pointer;
+      while (circuitReferenceMap[rootInsert].pointer !== circuitReferenceMap[rootInsert].id) {
+        circuitReferenceMap[rootInsert].pointer = circuitReferenceMap[circuitReferenceMap[rootInsert].pointer].pointer;
         rootInsert = circuitReferenceMap[rootInsert].pointer;
       }
 
       let secondCircuitMerge = nextPair[1];
-      while (
-        circuitReferenceMap[secondCircuitMerge].pointer !==
-        circuitReferenceMap[secondCircuitMerge].id
-      ) {
+      while (circuitReferenceMap[secondCircuitMerge].pointer !== circuitReferenceMap[secondCircuitMerge].id) {
         circuitReferenceMap[secondCircuitMerge].pointer =
-          circuitReferenceMap[
-            circuitReferenceMap[secondCircuitMerge].pointer
-          ].pointer;
+          circuitReferenceMap[circuitReferenceMap[secondCircuitMerge].pointer].pointer;
         secondCircuitMerge = circuitReferenceMap[secondCircuitMerge].pointer;
       }
 
       if (rootInsert === secondCircuitMerge) continue;
 
-      let junctionsToMerge =
-        circuits[circuitReferenceMap[secondCircuitMerge].pointer];
+      let junctionsToMerge = circuits[circuitReferenceMap[secondCircuitMerge].pointer];
       circuits[circuitReferenceMap[rootInsert].pointer] = [
         ...circuits[circuitReferenceMap[rootInsert].pointer],
         ...junctionsToMerge,
       ];
       delete circuits[secondCircuitMerge];
-      circuitReferenceMap[secondCircuitMerge].pointer =
-        circuitReferenceMap[rootInsert].pointer;
+      circuitReferenceMap[secondCircuitMerge].pointer = circuitReferenceMap[rootInsert].pointer;
       lastPair = nextPair;
       circuitsLeft--;
     } else {
-      throw new Error(
-        "There are no more closest pairs of junctions to connect."
-      );
+      throw new Error("There are no more closest pairs of junctions to connect.");
     }
   }
 
   return [circuits, lastPair];
 };
 
-export const partOne = (
-  userInput: string,
-  connectionTarget = 1000
-): PuzzleSolutionMetadata => {
+export const partOne = (userInput: string, connectionTarget = 1000): PuzzleSolutionMetadata => {
   const benchmark = performance.now();
   const contents = splitUserInputByCharacter(userInput);
   let result = 0;
   let messages: string[] = [];
   let scores: number[] = [];
   const circuits = getCircuits(contents, connectionTarget);
-  Object.keys(circuits).forEach((circuit) =>
-    scores.push(circuits[circuit].length)
-  );
+  Object.keys(circuits).forEach((circuit) => scores.push(circuits[circuit].length));
   scores.sort((a, b) => b - a);
   result = scores.slice(0, 3).reduce((acc, value) => (acc *= value), 1);
   return { result, messages, benchmark: performance.now() - benchmark };

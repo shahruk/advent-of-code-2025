@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  parsePuzzleInputRightToleft,
-  parsePuzzleInput,
-  partOne,
-  partTwo,
-  solveProblem,
-} from "./solution";
+import { parsePuzzleInputRightToleft, parsePuzzleInput, partOne, partTwo, solveProblem } from "./solution";
 import metadata, { sampleInput } from ".";
 
 describe("Advent of Code - Day 6", () => {

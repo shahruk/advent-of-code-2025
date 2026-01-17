@@ -13,10 +13,7 @@ export const getLargestBatteryPair = (input: string): number => {
 };
 
 // Loop until our result has the number of characters required
-export const getLargestBatteryCombination = (
-  input: string,
-  numberOfSelections = 12
-) => {
+export const getLargestBatteryCombination = (input: string, numberOfSelections = 12) => {
   let result = ``;
   let startingIndex = 0;
   while (result.length < numberOfSelections) {

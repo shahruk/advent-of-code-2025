@@ -23,48 +23,37 @@ function shuffle(arr: any[]): any[] {
 describe("Advent of Code - Day 8", () => {
   describe("findEuclidianDistance", () => {
     it("returns the correct value", () => {
-      expect(
-        Math.floor(findEuclidianDistance("431,825,988", "162,817,812"))
-      ).toEqual(321);
+      expect(Math.floor(findEuclidianDistance("431,825,988", "162,817,812"))).toEqual(321);
     });
   });
 
   describe("getClosestPairs", () => {
     it("returns the correct value", () => {
-      const pairs = getClosestPairs(
-        shuffle(splitUserInputByCharacter(metadata[0].sampleInput))
-      ).reverse();
+      const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput))).reverse();
       console.log("pairs", pairs);
-      expect(
-        pairs[0]
-          .slice(0, 2)
-          .sort((a, b) => parseInt(a as string) - parseInt(b as string))
-      ).toEqual(["162,817,812", "425,690,689"]);
-      expect(
-        pairs[1]
-          .slice(0, 2)
-          .sort((a, b) => parseInt(a as string) - parseInt(b as string))
-      ).toEqual(["162,817,812", "431,825,988"]);
-      expect(
-        pairs[2]
-          .slice(0, 2)
-          .sort((a, b) => parseInt(a as string) - parseInt(b as string))
-      ).toEqual(["805,96,715", "906,360,560"]);
+      expect(pairs[0].slice(0, 2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual([
+        "162,817,812",
+        "425,690,689",
+      ]);
+      expect(pairs[1].slice(0, 2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual([
+        "162,817,812",
+        "431,825,988",
+      ]);
+      expect(pairs[2].slice(0, 2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual([
+        "805,96,715",
+        "906,360,560",
+      ]);
       expect(Math.floor(parseInt(pairs[3].slice(2)[0] as string))).toEqual(328);
-      expect(
-        pairs[3]
-          .slice(0, 2)
-          .sort((a, b) => parseInt(a as string) - parseInt(b as string))
-      ).toEqual(["425,690,689", "431,825,988"]);
+      expect(pairs[3].slice(0, 2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual([
+        "425,690,689",
+        "431,825,988",
+      ]);
     });
   });
 
   describe("getCircuits", () => {
     it("returns the correct value", () => {
-      const circuits = getCircuits(
-        splitUserInputByCharacter(metadata[0].sampleInput),
-        10
-      );
+      const circuits = getCircuits(splitUserInputByCharacter(metadata[0].sampleInput), 10);
       console.log("circuits", circuits);
       expect(circuits["162,817,812"].length).toEqual(4);
       expect(circuits["906,360,560"].length).toEqual(5);
@@ -75,9 +64,7 @@ describe("Advent of Code - Day 8", () => {
 
   describe("getFullCircuit", () => {
     it("returns the correct value", () => {
-      const circuit = getFullCircuit(
-        splitUserInputByCharacter(metadata[0].sampleInput)
-      );
+      const circuit = getFullCircuit(splitUserInputByCharacter(metadata[0].sampleInput));
       console.log("full circuit", circuit);
     });
   });

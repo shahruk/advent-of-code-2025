@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  getLargestBatteryCombination,
-  getLargestBatteryPair,
-  partOne,
-  partTwo,
-} from "./solution";
+import { getLargestBatteryCombination, getLargestBatteryPair, partOne, partTwo } from "./solution";
 import metadata from ".";
 
 describe("Advent of Code - Day 3", () => {
@@ -21,18 +16,10 @@ describe("Advent of Code - Day 3", () => {
     it("returns the correct value", () => {
       expect(getLargestBatteryCombination("1234", 2)).toEqual(34);
       expect(getLargestBatteryCombination("91234", 2)).toEqual(94);
-      expect(getLargestBatteryCombination("987654321111111")).toEqual(
-        987654321111
-      );
-      expect(getLargestBatteryCombination("811111111111119")).toEqual(
-        811111111119
-      );
-      expect(getLargestBatteryCombination("234234234234278")).toEqual(
-        434234234278
-      );
-      expect(getLargestBatteryCombination("818181911112111")).toEqual(
-        888911112111
-      );
+      expect(getLargestBatteryCombination("987654321111111")).toEqual(987654321111);
+      expect(getLargestBatteryCombination("811111111111119")).toEqual(811111111119);
+      expect(getLargestBatteryCombination("234234234234278")).toEqual(434234234278);
+      expect(getLargestBatteryCombination("818181911112111")).toEqual(888911112111);
     });
   });
   describe("Part One", () => {

@@ -23,11 +23,7 @@ export const parsePuzzleInputRightToleft = (userInput: string) => {
   let currentProblemConstruction = [];
   for (let i = rows[0].length - 1; i >= -1; i--) {
     // Column scan
-    let column = rows.reduce(
-      (acc, value, index) =>
-        (acc += value[i] && index < rows.length - 1 ? value[i] : ""),
-      ""
-    );
+    let column = rows.reduce((acc, value, index) => (acc += value[i] && index < rows.length - 1 ? value[i] : ""), "");
     if (column.trim().length) {
       currentProblemConstruction.push(column.trim());
     } else {
