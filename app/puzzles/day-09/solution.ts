@@ -1,8 +1,8 @@
 import type { PuzzleSolutionMetadata } from "~/lib/types";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
-type TilePositions = { [key: number]: number[] };
-type GreenTilePositionRanges = { [key: number]: [number, number][] };
+type TilePositions = { [key: string]: number[] };
+type GreenTilePositionRanges = { [key: string]: [number, number][] };
 type SingleTilePosition = [number, number];
 
 export const getRedTilePositions = (userInput: string): [TilePositions, TilePositions] => {
@@ -18,11 +18,11 @@ export const getRedTilePositions = (userInput: string): [TilePositions, TilePosi
   });
 
   Object.keys(xResults).forEach((key: string) => {
-    xResults[parseInt(key)].sort((a: number, b: number) => a - b);
+    xResults[key].sort((a: number, b: number) => a - b);
   });
 
   Object.keys(yResults).forEach((key: string) => {
-    yResults[parseInt(key)].sort((a: number, b: number) => a - b);
+    yResults[key].sort((a: number, b: number) => a - b);
   });
 
   return [xResults, yResults];
@@ -34,9 +34,9 @@ export const getGreenTilePositions = (userInput: string): [GreenTilePositionRang
   const yResults: GreenTilePositionRanges = {};
   // Need to be bridged vertically
   Object.keys(redXCoords)
-    .filter((key) => redXCoords[parseInt(key)].length > 1)
+    .filter((key) => redXCoords[key].length > 1)
     .forEach((key) => {
-      let colData = redXCoords[parseInt(key)];
+      let colData = redXCoords[key];
       let ranges: [number, number][] = [];
       let newPoint: number[] = [];
       colData.forEach((y) => {
@@ -46,14 +46,14 @@ export const getGreenTilePositions = (userInput: string): [GreenTilePositionRang
           newPoint = [];
         }
       });
-      xResults[parseInt(key)] = ranges;
+      xResults[key] = ranges;
     });
 
   // Need to be bridged horizontally
   Object.keys(redYCoords)
-    .filter((key) => redYCoords[parseInt(key)].length > 1)
+    .filter((key) => redYCoords[key].length > 1)
     .forEach((key) => {
-      let colData = redYCoords[parseInt(key)];
+      let colData = redYCoords[key];
       let ranges: [number, number][] = [];
       let newPoint: number[] = [];
       colData.forEach((x) => {
@@ -63,7 +63,7 @@ export const getGreenTilePositions = (userInput: string): [GreenTilePositionRang
           newPoint = [];
         }
       });
-      yResults[parseInt(key)] = ranges;
+      yResults[key] = ranges;
     });
 
   return [xResults, yResults];
@@ -72,21 +72,23 @@ const pointToCoord = (point: string): [number, number] => {
   return point.split(",").map((num) => parseInt(num)) as [number, number];
 };
 
-export const getHighestArea = (userInput: string): number => {
+export const getHighestArea = (userInput: string): [number, [number, number], [number, number]] => {
   const contents = splitUserInputByCharacter(userInput);
   const visited: { [key: string]: boolean } = {};
   let result = 0;
+  let pointCoord: [number, number] | unknown = undefined;
+  let pointCoord2: [number, number] | unknown = undefined;
   contents.forEach((point) => {
-    let pointCoord = pointToCoord(point);
+    pointCoord = pointToCoord(point);
     contents.forEach((point2) => {
       if (visited[point2]) return;
-      let pointCoord2 = pointToCoord(point2);
-      let area = calculateAreaBetweenPoints(pointCoord, pointCoord2);
+      pointCoord2 = pointToCoord(point2);
+      let area = calculateAreaBetweenPoints(pointCoord as [number, number], pointCoord2 as [number, number]);
       result = Math.max(result, area);
     });
     visited[point] = true;
   });
-  return result;
+  return [result, pointCoord as [number, number], pointCoord2 as [number, number]];
 };
 
 export const calculateAreaBetweenPoints = (pointCoord: [number, number], pointCoord2: [number, number]): number => {
@@ -120,7 +122,7 @@ export const isGreenTile = (
     let found = 0;
     for (let i = 0; i < topHorizontalKeys.length; i++) {
       let key = topHorizontalKeys[i];
-      let values = greenHorizontalYCoords[parseInt(key)];
+      let values = greenHorizontalYCoords[key];
       let foundValue = values.filter((pair) => pair[0] <= pointCoord[0] && pair[1] >= pointCoord[0]);
       if (foundValue.length >= 1) found += foundValue.length;
     }
@@ -131,7 +133,7 @@ export const isGreenTile = (
     let found = 0;
     for (let i = 0; i < bottomBorizontalKeys.length; i++) {
       let key = bottomBorizontalKeys[i];
-      let values = greenHorizontalYCoords[parseInt(key)];
+      let values = greenHorizontalYCoords[key];
       let foundValue = values.filter((pair) => pair[0] <= pointCoord[0] && pair[1] >= pointCoord[0]);
       if (foundValue.length >= 1) found += foundValue.length;
     }
@@ -143,7 +145,7 @@ export const isGreenTile = (
     let found = 0;
     for (let i = 0; i < leftVerticalKeys.length; i++) {
       let key = leftVerticalKeys[i];
-      let values = greenVerticalXCoords[parseInt(key)];
+      let values = greenVerticalXCoords[key];
       let foundValue = values.filter((pair) => pair[0] <= pointCoord[1] && pair[1] >= pointCoord[1]);
       if (foundValue.length >= 1) found += foundValue.length;
     }
@@ -155,7 +157,7 @@ export const isGreenTile = (
     let found = 0;
     for (let i = 0; i < rightVerticalKeys.length; i++) {
       let key = rightVerticalKeys[i];
-      let values = greenVerticalXCoords[parseInt(key)];
+      let values = greenVerticalXCoords[key];
       let foundValue = values.filter((pair) => pair[0] <= pointCoord[1] && pair[1] >= pointCoord[1]);
       if (foundValue.length >= 1) found += foundValue.length;
     }
@@ -199,23 +201,26 @@ export const isAllGreenOrRed = (
   let coords = [pointCoord, pointCoord2];
   let [[minX], [maxX]] = coords.sort((a, b) => a[0] - b[0]);
   let [[_x1, minY], [_x2, maxY]] = coords.sort((a, b) => a[1] - b[1]);
-  // console.log('evaluating:', coords, calculateAreaBetweenPoints(pointCoord, pointCoord2));
-  let corners: [number, number][] = [
-    [minX, minY],
-    [maxX, minY],
-    [maxX, maxY],
-    [minX, maxY],
-  ];
 
-  for (let corner of corners) {
-    if (!isTileValid(corner, redTilePositions, greenTilePositions, knownTiles)) {
-      return false;
+  let innerYCoords = Object.keys(greenYCoords).filter((y) => parseInt(y) >= minY && parseInt(y) <= maxY);
+  for (let i of innerYCoords) {
+    let innerBreaches = greenYCoords[i].filter(
+      (range) =>
+        (range[0] > minX && range[0] < maxX && range[1] > maxX) ||
+        (range[0] < minX && range[1] > minX && range[1] < maxX)
+    );
+    if (innerBreaches.length > 0) return false;
+
+    // Find intersecting lines
+    if (parseInt(i) > minY && parseInt(i) < maxY) {
+      let outerBreaches = greenYCoords[i].filter((range) => range[0] <= minX && range[1] >= maxX);
+      if (outerBreaches.length > 0) return false;
     }
   }
 
   let innerXCoords = Object.keys(redXCoords).filter((x) => parseInt(x) >= minX && parseInt(x) <= maxX);
   for (let i of innerXCoords) {
-    let innerEdges = (redXCoords[parseInt(i)] || []).filter((y) => y >= minY && y <= maxY);
+    let innerEdges = (redXCoords[i] || []).filter((y) => y >= minY && y <= maxY);
     let gapFound = false;
     let options = [
       [0, -1],
@@ -241,7 +246,7 @@ export const isAllGreenOrRed = (
   return true;
 };
 
-export const getHighestAreaWithinPerimeter = (userInput: string): number => {
+export const getHighestAreaWithinPerimeter = (userInput: string): [number, [number, number]?, [number, number]?] => {
   const redTilePositions = getRedTilePositions(userInput);
   const greenTilePositions = getGreenTilePositions(userInput);
   const contents = splitUserInputByCharacter(userInput);
@@ -264,10 +269,10 @@ export const getHighestAreaWithinPerimeter = (userInput: string): number => {
     let [pointCoord, pointCoord2, area] = result;
     let allValid = isAllGreenOrRed(pointCoord, pointCoord2, redTilePositions, greenTilePositions, knownTiles);
     if (allValid) {
-      return area;
+      return [area, pointCoord, pointCoord2];
     }
   }
-  return 0;
+  return [0];
 };
 
 export const partOne = (userInput: string): PuzzleSolutionMetadata => {
@@ -280,10 +285,9 @@ export const partOne = (userInput: string): PuzzleSolutionMetadata => {
 
 export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   let benchmark = performance.now();
-  let result: number = 0;
-  result = getHighestAreaWithinPerimeter(userInput);
+  let [result, pointCoord, pointCoord2] = getHighestAreaWithinPerimeter(userInput);
   benchmark = performance.now() - benchmark;
-  let messages: string[] = []; //drawGrid(userInput);
+  let messages: string[] = [`Largest area is between points: ${pointCoord} and ${pointCoord2}`];
   return { result, messages, benchmark };
 };
 

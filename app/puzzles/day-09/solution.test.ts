@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  calculateAreaBetweenPoints,
   drawGrid,
   getGreenTilePositions,
   getRedTilePositions,
@@ -11,6 +10,18 @@ import {
   partTwo,
 } from "./solution";
 import metadata from ".";
+
+const doubleSquare = `
+1,0
+18,0
+18,9
+1,9
+1,0
+3,2
+16,2
+16,7
+3,7
+3,2`;
 
 const hShape = `1,0
 3,0
@@ -44,6 +55,29 @@ const lShape = `1,1
     1,6`;
 
 describe("Advent of Code - Day 9", () => {
+  describe('drawGrid', () => {
+    it.only('returns the correct value', () => {
+      const outerRectangle = `
+1,0
+18,0
+18,9
+1,9
+1,0`;
+
+const innerRectangle = `
+3,2
+16,2
+16,7
+3,7
+3,2`;
+console.log(drawGrid(outerRectangle));
+console.log(drawGrid(innerRectangle));
+      console.log(drawGrid(doubleSquare));
+      const redTilePositions = getRedTilePositions(doubleSquare);
+      const greenTilePositions = getGreenTilePositions(doubleSquare);
+      expect(isAllGreenOrRed([1, 0], [18, 11], redTilePositions, greenTilePositions)).toEqual(false);
+    })
+  });
   describe("getRedTilePositions", () => {
     it("returns the correct value", () => {
       expect(getRedTilePositions(metadata[0].sampleInput)[0]).toEqual({
