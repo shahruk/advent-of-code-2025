@@ -81,10 +81,10 @@ export class Machine {
     while (queue.length) {
       let buttonsToPress = queue.shift() as Buttons;
       let futureState = this.pressButtons(buttonsToPress);
-      if (futureState.filter(char => char === 0).length === futureState.length) continue;
+      if (futureState.filter((char) => char === 0).length === futureState.length) continue;
       if (futureState.join("") === target) return buttonsToPress;
-      if (exploredStates.has(futureState.join(''))) continue;
-      exploredStates.add(futureState.join(''));
+      if (exploredStates.has(futureState.join(""))) continue;
+      exploredStates.add(futureState.join(""));
       if (iterations++ > 5000) {
         console.error("Fail at", futureState.join(""), "===", target);
         queue = [];

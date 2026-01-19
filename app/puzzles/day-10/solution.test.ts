@@ -39,17 +39,21 @@ describe("Advent of Code - Day 10", () => {
           ).toEqual([0, 1, 1, 0]);
         });
 
-        it('returns the correct value', () => {
-          expect(machine2.pressButtons(
-            [ [ 0, 4 ], [ 0, 1, 2 ], [ 1, 2, 3, 4 ] ]
-          )).toEqual([0,0,0,1,0])
-        })
+        it("returns the correct value", () => {
+          expect(
+            machine2.pressButtons([
+              [0, 4],
+              [0, 1, 2],
+              [1, 2, 3, 4],
+            ])
+          ).toEqual([0, 0, 0, 1, 0]);
+        });
       });
     });
 
-    describe('findStateDifference', () => {
-      it('returns the correct value', () => {
-        expect(machine.findStateDifference([1,0,1,0])).toEqual([0, 2]);
+    describe("findStateDifference", () => {
+      it("returns the correct value", () => {
+        expect(machine.findStateDifference([1, 0, 1, 0])).toEqual([0, 2]);
       });
     });
 
@@ -60,18 +64,19 @@ describe("Advent of Code - Day 10", () => {
         expect(machine3.configureWithFewestPresses().length).toEqual(2);
       });
 
-      it('returns the correct value', () => {
-        const newMachine = new Machine(`[..##..#..] (0,4,8) (1,4,8) (1,2,3,5,7,8) (3,4,6,7) (1,2,4,6,7) (0,5,6,7,8) (0,1,3,6,7,8) (0,1,4,5,7) {31,52,25,41,41,43,43,71,52})`);
+      it("returns the correct value", () => {
+        const newMachine = new Machine(
+          `[..##..#..] (0,4,8) (1,4,8) (1,2,3,5,7,8) (3,4,6,7) (1,2,4,6,7) (0,5,6,7,8) (0,1,3,6,7,8) (0,1,4,5,7) {31,52,25,41,41,43,43,71,52})`
+        );
 
         expect(newMachine.configureWithFewestPresses().length).toEqual(4);
       });
     });
   });
 
-  describe('Part One', () => {
-    it('returns the correct value', () => {
-      
+  describe("Part One", () => {
+    it("returns the correct value", () => {
       expect(partOne(metadata[0].sampleInput).result).toEqual(7);
     });
-  })
+  });
 });
