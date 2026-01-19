@@ -77,17 +77,19 @@ export class Machine {
       })
       .map((button) => [button]);
     let iterations = 0;
+    let exploredStates = new Set();
     while (queue.length) {
       let buttonsToPress = queue.shift() as Buttons;
       let futureState = this.pressButtons(buttonsToPress);
+      if (futureState.filter(char => char === 0).length === futureState.length) continue;
       if (futureState.join("") === target) return buttonsToPress;
+      if (exploredStates.has(futureState.join(''))) continue;
+      exploredStates.add(futureState.join(''));
       if (iterations++ > 5000) {
         console.error("Fail at", futureState.join(""), "===", target);
         queue = [];
         return [];
       }
-      const differentIndexes = this.findStateDifference(futureState, this.getIndicatorTarget());
-      const currentMiniumPresses = this.findStateDifference(this.pressButtons(queue[0] as Buttons), this.getIndicatorTarget());
       for (let button of sortedButtons) {
         const newQueueItem = buttonsToPress.concat([button]);
         queue.push(newQueueItem);
