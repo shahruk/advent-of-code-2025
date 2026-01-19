@@ -2,10 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import type {
-  PuzzleSolutionHandler,
-  PuzzleSolutionMetadata,
-} from "~/lib/types";
+import type { PuzzleSolutionHandler, PuzzleSolutionMetadata } from "~/lib/types";
 
 export const SolutionArea = ({
   defaultValue,
@@ -41,28 +38,23 @@ export const SolutionArea = ({
   return (
     <div className="mt-2 grid w-full gap-3">
       <Label className="text-md">Your puzzle</Label>
-      <Textarea
-        className="max-h-[50vh]"
-        onChange={onUserInputChange}
-        defaultValue={defaultValue}
-      />
+      <Textarea className="max-h-[50vh]" onChange={onUserInputChange} defaultValue={defaultValue} />
       <Button onClick={() => onUserSubmit()}>Run</Button>
       {answer && (
         <div>
           <div>
-            Your solution is{" "}
-            <span className="text-lg font-bold">{answer.result}</span>
+            Your solution is <span className="text-lg font-bold">{answer.result}</span>
           </div>
           {answer.benchmark !== undefined && answer.benchmark >= 0 && (
             <div>
               {" "}
-              <span className="text-lg font-bold">
-                The solution took {answer.benchmark}ms
-              </span>
+              <span className="text-lg font-bold">The solution took {answer.benchmark}ms</span>
             </div>
           )}
           <pre className="max-h-[50vh] overflow-scroll border-2 border-slate-900 text-xs text-white bg-black whitespace-break-spaces">
-            {answer.messages?.map(line => <div>{ line }</div>)}
+            {answer.messages?.map((line) => (
+              <div>{line}</div>
+            ))}
           </pre>
         </div>
       )}

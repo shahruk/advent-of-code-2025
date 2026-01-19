@@ -5,9 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const splitUserInputByCharacter = (
-  userInput: string,
-  char: string = "\n"
-) => {
+export const splitUserInputByCharacter = (userInput: string, char: string = "\n") => {
   return userInput.trim().split(char);
 };

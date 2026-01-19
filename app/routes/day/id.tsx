@@ -35,11 +35,7 @@ export default function PuzzleDayPage() {
               <TabsContent key={index + 1} value={(index + 1).toString()}>
                 <div className="mb-4">
                   <Button asChild>
-                    <a
-                      target="_blank"
-                      href={puzzle.srcUrl}
-                      rel="noopener noreferrer"
-                    >
+                    <a target="_blank" href={puzzle.srcUrl} rel="noopener noreferrer">
                       Day {id} Puzzle Link
                     </a>
                   </Button>
