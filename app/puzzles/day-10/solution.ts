@@ -133,7 +133,7 @@ export class Machine {
       const isJoltageMet = this.isJoltageMet(futureJoltage, this.attributes.joules);
       const difference = this.subtractMatrixes(this.getIndicatorTarget(), futureState);
       const differenceKey = difference.join("");
-      const isIndicatorMet = parseInt(difference.join("")) === 0;
+      const isIndicatorMet = true; //parseInt(difference.join("")) === 0;
       const key = futureState.join("");
 
       // Scenario 1: Difference exists
@@ -144,31 +144,39 @@ export class Machine {
         // 11111
         // =====
         // 01010
-        const futureButtonPresses = [...buttonsToPress, exploredStates.get(differenceKey)];
+        const futureButtonPresses = [...buttonsToPress, ...exploredStates.get(differenceKey)];
         let [futureState, futureJoltage] = this.pressButtons(futureButtonPresses);
         const isJoltageMet = this.isJoltageMet(futureJoltage, this.attributes.joules);
         const difference = this.subtractMatrixes(this.getIndicatorTarget(), futureState);
         const isIndicatorMet = parseInt(difference.join("")) === 0;
-
-        if (isJoltageMet && isIndicatorMet) {
-          result = futureButtonPresses;
-          console.log(
-            "=== VALID ===",
-            futureState,
-            "futureJoltage:",
-            futureJoltage,
-            "futureButtonPResses:",
-            futureButtonPresses,
-            this.attributes
-          );
+        // if (isJoltageMet && isIndicatorMet) {
+        //   result = futureButtonPresses;
+        //   // console.log(
+        //   //   "=== VALID ===",
+        //   //   futureState,
+        //   //   "futureJoltage:",
+        //   //   futureJoltage,
+        //   //   "futureButtonPResses:",
+        //   //   futureButtonPresses,
+        //   //   this.attributes
+        //   // );
+        //   return result;
+        // }
+      }
+        if (iterations++ > 5000) {
+          console.error('Ending at 5000 iterations.', isJoltageMet, isIndicatorMet, difference, futureJoltage, this.attributes.joules, 'result:', result);
           return result;
         }
-      }
-      
       if (isJoltageMet) {
-        if (isIndicatorMet) return buttonsToPress;
         if (buttonsToPress.length < exploredStates.get(key).length) {
           exploredStates.set(key, buttonsToPress);
+        }
+        if (isIndicatorMet) {
+          console.log('met:', buttonsToPress, isJoltageMet);
+          if (result.length === 0 || buttonsToPress.length < result.length) {
+            console.log(result, 'setting:', buttonsToPress)
+            result = buttonsToPress;
+          }
         }
       } else {
         if (!exploredStates.has(key)) {
@@ -194,15 +202,16 @@ export class Machine {
 
       }
       // console.log("differenceL", differenceKey, exploredStates);
-      console.log('ITERATING:', buttonsToPress, futureJoltage, this.attributes.joules);
-      if (iterations++ > 10000) return false;
+      // console.log('ITERATING:', buttonsToPress, futureJoltage, this.attributes.joules);
+      // if (iterations++ > 10000) return false;
       // if (!isJoltageMet || exploredStates.has(differenceKey)) {
       for (let button of this.attributes.buttons) {
         const newQueueItem = buttonsToPress.concat([button]);
+        if (result.length > 0 && result.length < newQueueItem.length) continue;
         queue.push(newQueueItem);
       }
     }
-    console.log(queue);
+    console.log('Ending:', queue);
 
     return result;
   }
@@ -258,6 +267,11 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   let result = 0;
   const messages: string[] = [];
   const benchmark = performance.now();
-  contents.forEach((line) => {});
+  contents.forEach((line) => {
+    let machine = new Machine(line);
+    const leastPresses = machine.configureWithJoltage();
+    messages.push(`${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`);
+    result += leastPresses.length;
+  });
   return { result, messages, benchmark: performance.now() - benchmark };
 };

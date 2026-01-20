@@ -69,6 +69,7 @@ describe("Advent of Code - Day 10", () => {
     describe('isJoltageMet', () => {
       it('returns the correct value', () => {
         expect(machine.isJoltageMet([4,4,4,0], [1,2,3,4])).toEqual(false);
+        expect(machine.isJoltageMet([1,0,1,1], [0,0,0,1])).toEqual(true);
       })
     })
 
@@ -84,7 +85,11 @@ describe("Advent of Code - Day 10", () => {
 
     describe('configureWithJoltage', () => {
       it("returns the correct value with joltage", () => {
-        console.log(machine, machine.configureWithJoltage());
+        const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
+        expect(smallMachine.configureWithJoltage().length).toEqual(5);
+        
+        const smallMachine2 = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
+        expect(smallMachine2.configureWithJoltage().length).toEqual(5);
         expect(machine.configureWithJoltage().length).toEqual(10);
       });
     })
