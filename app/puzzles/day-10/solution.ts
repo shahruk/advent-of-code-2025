@@ -105,14 +105,11 @@ export class Machine {
     let results: number[] = [];
     for (let i = 0; i < matrix1.length; i++) {
       results[i] = Math.abs(matrix1[i] - matrix2[i]) % base;
-      // if (matrix1[i] === matrix2[i]) results[i] = 0;
-      // else results[i] = 1;
     }
     return results;
   }
 
   isJoltageMet(currentJoltage: number[], targetJoltage: number[]): boolean {
-    let result = true;
     for (let i = 0; i < currentJoltage.length; i++) {
       if (currentJoltage[i] < targetJoltage[i]) {
         return false;
@@ -121,49 +118,78 @@ export class Machine {
     return true;
   }
 
+  findJoltagesRemaining(joltage: number[]): number[] {
+    let indexes = [];
+    for(let i = 0; i < this.attributes.joules.length; i++) {
+      if (this.attributes.joules[i] > joltage[i]) {
+        indexes.push(i);
+      }
+    }
+    return indexes;
+  }
+
   configureWithJoltage() {
     let queue: Buttons[] = [...this.attributes.buttons].map((button) => [button]);
     let result: Buttons = [];
     let exploredJoltages = new Map();
     let iterations = 0;
-    let currentMax = 0;
     while (queue.length) {
-      console.log(result);
       let buttonsToPress = queue.shift() as Buttons;
-      const isLessPresses = result.length > buttonsToPress.length;
       let [_futureState, futureJoltage] = this.pressButtons(buttonsToPress);
-      if (iterations ++ > 5000) {
-        console.log('BREAKIN', buttonsToPress)
-        return result;
-      }
-      const futureJoltageKey = futureJoltage.join('');
-      if (!exploredJoltages.has(futureJoltageKey)) {
-        exploredJoltages.set(futureJoltageKey, buttonsToPress);
-      }
-      if (parseInt(futureJoltageKey) >= currentMax || isLessPresses) {
-        currentMax = parseInt(futureJoltageKey);
-      } else {
+      const futureJoltageKey = futureJoltage.join("");
+      if (
+        exploredJoltages.has(futureJoltageKey) &&
+        exploredJoltages.get(futureJoltageKey).length < buttonsToPress.length
+      )
+      continue;
+      exploredJoltages.set(futureJoltageKey, buttonsToPress);
+      if (this.isJoltageMet(futureJoltage, this.attributes.joules)) {
+        result = buttonsToPress;
         continue;
       }
-      const isJoltageMet = this.isJoltageMet(futureJoltage, this.attributes.joules);
-      console.log(isJoltageMet, futureJoltage, this.attributes.joules)
-      if (isJoltageMet) {
-        if (result.length === 0 || isLessPresses) {
-          result = buttonsToPress;
-        }
-      } else {
-        if (exploredJoltages.has(futureJoltageKey) && buttonsToPress.length > 0 && exploredJoltages.get(futureJoltageKey).length > buttonsToPress.length) continue;
 
-        exploredJoltages.set(futureJoltageKey, buttonsToPress);
+      if (iterations++ >= 20000) {
+        throw new Error('Too many executions, break')
+        continue;
       }
+      
       for (let button of this.attributes.buttons) {
-        const newQueueItem = buttonsToPress.concat([button]);
-        if (result.length > 0 && result.length < newQueueItem.length) continue;
-        queue.push(newQueueItem);
+        let difference = this.subtractMatrixes(futureJoltage, this.attributes.joules, 10);
+        let additionalButtons = exploredJoltages.has(difference.join(""))
+        ? exploredJoltages.get(difference.join(""))
+        : [];
+        let totalButtons = [...buttonsToPress, ...additionalButtons];
+        if (additionalButtons.length > 0) {
+          let shouldSet =
+          !exploredJoltages.has(this.attributes.joules.join("")) ||
+          exploredJoltages.get(this.attributes.joules.join("")).length > totalButtons.length;
+          if (shouldSet) {
+            exploredJoltages.set(this.attributes.joules.join(""), totalButtons);
+            result = totalButtons;
+          }
+        } else {
+          const newQueueItem = buttonsToPress.concat([button]);
+          let [newIndicator, newJoltage] = this.pressButtons(newQueueItem);
+          const isMoreThanExistingResult = result.length > 0 && ((newQueueItem.length > result.length) || ((newQueueItem.length == result.length) && !this.isJoltageMet(newJoltage, this.attributes.joules)));
+
+          if (isMoreThanExistingResult) {
+            continue;
+          }
+
+          let [resultIndicator, resultJoltage] = this.pressButtons(result);
+          let indexesOfInterest = this.findJoltagesRemaining(newJoltage);
+          let includesAtLeastOne = indexesOfInterest.some(index => button.includes(index))
+          if (includesAtLeastOne || this.isJoltageMet(newJoltage, this.attributes.joules)) {
+            let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, newJoltage, 10);
+            let minPresses = joltagesRemaining.reduce((arr: number, value: number, index: number) => {
+              return Math.max(arr, value);
+            }, 0);
+            if (result.length > 0 && minPresses > (result.length - newQueueItem.length)) continue;
+            queue.push(newQueueItem);
+          }
+        }
       }
     }
-    console.log('Ending:', queue);
-
     return result;
   }
 
@@ -221,7 +247,9 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   contents.forEach((line) => {
     let machine = new Machine(line);
     const leastPresses = machine.configureWithJoltage();
-    messages.push(`${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`);
+    messages.push(
+      `${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`
+    );
     result += leastPresses.length;
   });
   return { result, messages, benchmark: performance.now() - benchmark };
