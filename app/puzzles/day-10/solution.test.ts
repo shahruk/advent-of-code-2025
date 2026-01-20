@@ -60,6 +60,18 @@ describe("Advent of Code - Day 10", () => {
       });
     });
 
+    describe('subtractMatrixes', () => {
+      it('returns the correct value', () => {
+        expect(machine.subtractMatrixes([1,0,1,0,1], [1,1,1,1,1])).toEqual([0,1,0,1,0]);
+      })
+    })
+
+    describe('isJoltageMet', () => {
+      it('returns the correct value', () => {
+        expect(machine.isJoltageMet([4,4,4,0], [1,2,3,4])).toEqual(false);
+      })
+    })
+
     describe("configureWithFewestPresses", () => {
       it("returns the correct value", () => {
         expect(machine.configureWithFewestPresses().length).toEqual(2);
@@ -68,11 +80,14 @@ describe("Advent of Code - Day 10", () => {
         expect(machine4.configureWithFewestPresses().length).toEqual(4);
       });
 
-      it("returns the correct value with joltage", () => {
-        console.log(machine, machine.configureWithFewestPresses(true));
-        expect(machine.configureWithFewestPresses(true).length).toEqual(10);
-      });
     });
+
+    describe('configureWithJoltage', () => {
+      it("returns the correct value with joltage", () => {
+        console.log(machine, machine.configureWithJoltage());
+        expect(machine.configureWithJoltage().length).toEqual(10);
+      });
+    })
   });
 
   describe("Part One", () => {

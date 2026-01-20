@@ -67,11 +67,10 @@ export class Machine {
   }
 
   // Loop until we find the fewest number of button presses to turn the machine on
-  configureWithFewestPresses(useJoltage = false): Buttons {
+  configureWithFewestPresses(): Buttons {
     const targetIndicators = this.getIndicatorTarget().join("");
-    const sortedButtons = [...this.attributes.buttons].sort((a, b) => a.length - b.length);
     const indexOfInterest = this.findStateDifference(this.getIndicatorTarget());
-    let queue: Buttons[] = sortedButtons
+    let queue: Buttons[] = [...this.attributes.buttons]
       .filter((buttons) => {
         return indexOfInterest.some((index) => {
           return buttons.includes(index);
@@ -82,73 +81,130 @@ export class Machine {
     const exploredStates = new Map();
     let results: Buttons = [];
     while (queue.length) {
-      let skipQueueFlag = false;
       let buttonsToPress = queue.shift() as Buttons;
       let [futureState, futureJoltage] = this.pressButtons(buttonsToPress);
-      let joltageMet = false;
-      if (useJoltage) {
-        joltageMet = true;
-        for (let i = 0; i < this.attributes.joules.length; i++) {
-          if (futureJoltage[i] < this.attributes.joules[i]) {
-            i = this.attributes.joules.length;
-            // console.log(buttonsToPress, 'futureJoltage', futureJoltage, this.attributes.joules);
-            joltageMet = false;
-          }
-        }
-      }
-
-      if (!useJoltage || joltageMet) {
-        if (futureState.filter((char) => char === 0).length === futureState.length) continue;
-        if (futureState.join("") === targetIndicators) {
-          if (!useJoltage) return buttonsToPress;
-          if (results.length == 0 || (buttonsToPress.length < results.length)) {
-            console.log(results);
-            results = buttonsToPress;
-          }
-          skipQueueFlag = true;
-        }
-      }
-      if (exploredStates.has(futureState.join("")) && exploredStates.get(futureState.join("")).length < futureState.length) continue;
+      if (futureState.filter((char) => char === 0).length === futureState.length) continue;
+      if (futureState.join("") === targetIndicators) return buttonsToPress;
+      if (exploredStates.has(futureState.join(""))) continue;
       exploredStates.set(futureState.join(""), futureState);
-      if (iterations++ > 50000) {
+      if (iterations++ > 5000) {
         console.error("Fail at", futureState.join(""), "===", targetIndicators);
         queue = [];
         return [];
       }
-      if (useJoltage && !joltageMet) {
-        // See if all values are set, and then find the smallest divisor
-        let allSet = true;
-        for (let i = 0; i < this.attributes.joules.length; i++) {
-          if (futureJoltage[i] === 0) {
-            allSet = false;
-            i = this.attributes.joules.length;
-          }
-        }
-        // See if this doubles up
-        // if (allSet) {
-        //   let targetJoltage = parseInt(this.attributes.joules.join(""));
-        //   let newJoltage = parseInt(futureJoltage.join(""));
-        //   let multiples = Math.floor(targetJoltage / newJoltage);
-        //   let buttonsToAdd: Buttons = [];
-        //   for (let i = 0; i < multiples; i++) {
-        //     buttonsToAdd = buttonsToAdd.concat(buttonsToPress);
-        //   }
-        //   buttonsToPress = buttonsToAdd;
-        //   if (multiples) {
-        //     // console.log(buttonsToPress, targetJoltage / newJoltage, 'multiples:', multiples, buttonsToPress);
-        //   }
-        // }
-      }
-      // if (!skipQueueFlag) {
-        for (let button of sortedButtons) {
-          const newQueueItem = buttonsToPress.concat([button]);
-          queue.push(newQueueItem);
-          // if (useJoltage) console.log('inserting:', newQueueItem, queue)
-        // }
+
+      for (let button of this.attributes.buttons) {
+        const newQueueItem = buttonsToPress.concat([button]);
+        queue.push(newQueueItem);
       }
     }
-
     return results;
+  }
+
+  subtractMatrixes(matrix1: number[], matrix2: number[], base = 2): number[] {
+    let results: number[] = [];
+    for (let i = 0; i < matrix1.length; i++) {
+      results[i] = Math.abs(matrix1[i] - matrix2[i]) % base;
+      // if (matrix1[i] === matrix2[i]) results[i] = 0;
+      // else results[i] = 1;
+    }
+    return results;
+  }
+
+  isJoltageMet(currentJoltage: number[], targetJoltage: number[]): boolean {
+    let result = true;
+    for (let i = 0; i < currentJoltage.length; i++) {
+      if (currentJoltage[i] < targetJoltage[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  configureWithJoltage() {
+    const targetIndicators = this.getIndicatorTarget().join("");
+    let queue: Buttons[] = [...this.attributes.buttons].map((button) => [button]);
+    let result: Buttons = [];
+    let exploredStates = new Map();
+    let iterations = 0;
+    while (queue.length) {
+      let buttonsToPress = queue.shift() as Buttons;
+      let [futureState, futureJoltage] = this.pressButtons(buttonsToPress);
+      const isJoltageMet = this.isJoltageMet(futureJoltage, this.attributes.joules);
+      const difference = this.subtractMatrixes(this.getIndicatorTarget(), futureState);
+      const differenceKey = difference.join("");
+      const isIndicatorMet = parseInt(difference.join("")) === 0;
+      const key = futureState.join("");
+
+      // Scenario 1: Difference exists
+      if (exploredStates.has(differenceKey)) {
+        // Calculate the combined joltage
+        // Find what matrix we need to get the result we want, and then validate the joules
+        // 10101
+        // 11111
+        // =====
+        // 01010
+        const futureButtonPresses = [...buttonsToPress, exploredStates.get(differenceKey)];
+        let [futureState, futureJoltage] = this.pressButtons(futureButtonPresses);
+        const isJoltageMet = this.isJoltageMet(futureJoltage, this.attributes.joules);
+        const difference = this.subtractMatrixes(this.getIndicatorTarget(), futureState);
+        const isIndicatorMet = parseInt(difference.join("")) === 0;
+
+        if (isJoltageMet && isIndicatorMet) {
+          result = futureButtonPresses;
+          console.log(
+            "=== VALID ===",
+            futureState,
+            "futureJoltage:",
+            futureJoltage,
+            "futureButtonPResses:",
+            futureButtonPresses,
+            this.attributes
+          );
+          return result;
+        }
+      }
+      
+      if (isJoltageMet) {
+        if (isIndicatorMet) return buttonsToPress;
+        if (buttonsToPress.length < exploredStates.get(key).length) {
+          exploredStates.set(key, buttonsToPress);
+        }
+      } else {
+        if (!exploredStates.has(key)) {
+          exploredStates.set(key, buttonsToPress);
+        } else {
+          
+          if (buttonsToPress.length < exploredStates.get(key).length) {
+            exploredStates.set(key, buttonsToPress);
+          } else {
+            let [pastState, pastJoltage] = this.pressButtons(exploredStates.get(key));
+            let pastJoltageDifference = this.subtractMatrixes(this.attributes.joules, pastJoltage, 10);
+            let futureJoltageDifference = this.subtractMatrixes(this.attributes.joules, futureJoltage, 10);
+            if (buttonsToPress.length < exploredStates.get(key).length || parseInt(futureJoltageDifference.join('')) < parseInt(pastJoltageDifference.join(''))) {
+              exploredStates.set(key, buttonsToPress);
+            } else {
+              continue;
+            }
+            
+            // console.log('skipping..', this.attributes.joules, futureJoltage, 'future diff:', futureJoltageDifference, 'past:', pastJoltage, pastJoltageDifference);
+            // continue;
+          }
+        }
+
+      }
+      // console.log("differenceL", differenceKey, exploredStates);
+      console.log('ITERATING:', buttonsToPress, futureJoltage, this.attributes.joules);
+      if (iterations++ > 10000) return false;
+      // if (!isJoltageMet || exploredStates.has(differenceKey)) {
+      for (let button of this.attributes.buttons) {
+        const newQueueItem = buttonsToPress.concat([button]);
+        queue.push(newQueueItem);
+      }
+    }
+    console.log(queue);
+
+    return result;
   }
 
   /**
