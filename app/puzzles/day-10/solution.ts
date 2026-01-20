@@ -79,16 +79,16 @@ export class Machine {
       })
       .map((button) => [button]);
     let iterations = 0;
-    const exploredStates = new Set();
+    const exploredStates = new Map();
     let results: Buttons = [];
-    let skipQueueFlag = false;
     while (queue.length) {
+      let skipQueueFlag = false;
       let buttonsToPress = queue.shift() as Buttons;
       let [futureState, futureJoltage] = this.pressButtons(buttonsToPress);
       let joltageMet = false;
       if (useJoltage) {
         joltageMet = true;
-        for(let i = 0; i < this.attributes.joules.length; i++) {
+        for (let i = 0; i < this.attributes.joules.length; i++) {
           if (futureJoltage[i] < this.attributes.joules[i]) {
             i = this.attributes.joules.length;
             // console.log(buttonsToPress, 'futureJoltage', futureJoltage, this.attributes.joules);
@@ -96,55 +96,55 @@ export class Machine {
           }
         }
       }
-      
+
       if (!useJoltage || joltageMet) {
         if (futureState.filter((char) => char === 0).length === futureState.length) continue;
         if (futureState.join("") === targetIndicators) {
           if (!useJoltage) return buttonsToPress;
-          if ((results.length == 0) || buttonsToPress.length < results.length) {
+          if (results.length == 0 || (buttonsToPress.length < results.length)) {
             console.log(results);
             results = buttonsToPress;
           }
           skipQueueFlag = true;
         }
-        if (exploredStates.has(futureState.join(""))) continue;
-        exploredStates.add(futureState.join(""));
-      } 
-      // if (iterations++ > 50000) {
-        //   console.error("Fail at", futureState.join(""), "===", targetIndicators);
-        //   queue = [];
-        //   return [];
-        // }
-        if (useJoltage && !joltageMet) {
-          // See if all values are set, and then find the smallest divisor
-          let allSet = true;
-          for(let i = 0; i < this.attributes.joules.length; i++) {
-            if (futureJoltage[i] === 0) {
-              allSet = false;
-              i = this.attributes.joules.length;
-            }
-          }
-          // See if this divides clean
-          if (allSet) {
-            let targetJoltage = parseInt(this.attributes.joules.join(''));
-            let newJoltage = parseInt(futureJoltage.join(''));
-            let multiples = Math.floor(targetJoltage / newJoltage);
-            let buttonsToAdd: Buttons = [];
-            for(let i = 0; i < multiples; i++) {
-              buttonsToAdd = buttonsToAdd.concat(buttonsToPress);
-            }
-            buttonsToPress = buttonsToAdd;
-            if (multiples) {
-              // console.log(buttonsToPress, targetJoltage / newJoltage, 'multiples:', multiples, buttonsToPress);
-            }
+      }
+      if (exploredStates.has(futureState.join("")) && exploredStates.get(futureState.join("")).length < futureState.length) continue;
+      exploredStates.set(futureState.join(""), futureState);
+      if (iterations++ > 50000) {
+        console.error("Fail at", futureState.join(""), "===", targetIndicators);
+        queue = [];
+        return [];
+      }
+      if (useJoltage && !joltageMet) {
+        // See if all values are set, and then find the smallest divisor
+        let allSet = true;
+        for (let i = 0; i < this.attributes.joules.length; i++) {
+          if (futureJoltage[i] === 0) {
+            allSet = false;
+            i = this.attributes.joules.length;
           }
         }
-      if (!skipQueueFlag) {
+        // See if this doubles up
+        // if (allSet) {
+        //   let targetJoltage = parseInt(this.attributes.joules.join(""));
+        //   let newJoltage = parseInt(futureJoltage.join(""));
+        //   let multiples = Math.floor(targetJoltage / newJoltage);
+        //   let buttonsToAdd: Buttons = [];
+        //   for (let i = 0; i < multiples; i++) {
+        //     buttonsToAdd = buttonsToAdd.concat(buttonsToPress);
+        //   }
+        //   buttonsToPress = buttonsToAdd;
+        //   if (multiples) {
+        //     // console.log(buttonsToPress, targetJoltage / newJoltage, 'multiples:', multiples, buttonsToPress);
+        //   }
+        // }
+      }
+      // if (!skipQueueFlag) {
         for (let button of sortedButtons) {
           const newQueueItem = buttonsToPress.concat([button]);
           queue.push(newQueueItem);
           // if (useJoltage) console.log('inserting:', newQueueItem, queue)
-        }
+        // }
       }
     }
 
