@@ -14,6 +14,7 @@ export class Machine {
   buttonsPressed: Buttons[] = [];
   input: string;
   constructor(input: string) {
+    console.log("Machine created!");
     this.input = input;
     this.attributes = this.parseLine(this.input);
     this.state = this.getInitialState();
@@ -120,7 +121,7 @@ export class Machine {
 
   findJoltagesRemaining(joltage: number[]): number[] {
     let indexes = [];
-    for(let i = 0; i < this.attributes.joules.length; i++) {
+    for (let i = 0; i < this.attributes.joules.length; i++) {
       if (this.attributes.joules[i] > joltage[i]) {
         indexes.push(i);
       }
@@ -128,68 +129,67 @@ export class Machine {
     return indexes;
   }
 
+  calculateMinimumPresses(joltage: number[]) {
+    let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage, 10);
+    return joltagesRemaining.reduce((arr: number, value: number, index: number) => {
+      return Math.max(arr, value);
+    }, 0);
+  }
+
   configureWithJoltage() {
-    let queue: Buttons[] = [...this.attributes.buttons].map((button) => [button]);
+    const jouleMap = this.attributes.joules.map((item: number, index: number) => {
+      return { index, joules: item };
+    });
+    let sortedJoulesToFill = jouleMap.sort((a, b) => a.joules - b.joules);
     let result: Buttons = [];
-    let exploredJoltages = new Map();
-    let iterations = 0;
-    while (queue.length) {
-      let buttonsToPress = queue.shift() as Buttons;
-      let [_futureState, futureJoltage] = this.pressButtons(buttonsToPress);
-      const futureJoltageKey = futureJoltage.join("");
-      if (
-        exploredJoltages.has(futureJoltageKey) &&
-        exploredJoltages.get(futureJoltageKey).length < buttonsToPress.length
-      )
-      continue;
-      exploredJoltages.set(futureJoltageKey, buttonsToPress);
-      if (this.isJoltageMet(futureJoltage, this.attributes.joules)) {
-        result = buttonsToPress;
-        continue;
-      }
+    for (let i = 0; i < sortedJoulesToFill.length; i++) {
+      let missingJoules = Number.MAX_VALUE;
+      while (missingJoules > 0) {
+        let [position, currentJoules] = this.pressButtons(result);
+        missingJoules = sortedJoulesToFill[i].joules - currentJoules[i];
+        if (missingJoules <= 0) continue;
+        let indexesWithMissingJoules = [];
+        let amountMissing = [];
 
-      if (iterations++ >= 20000) {
-        throw new Error('Too many executions, break')
-        continue;
-      }
-      
-      for (let button of this.attributes.buttons) {
-        let difference = this.subtractMatrixes(futureJoltage, this.attributes.joules, 10);
-        let additionalButtons = exploredJoltages.has(difference.join(""))
-        ? exploredJoltages.get(difference.join(""))
-        : [];
-        let totalButtons = [...buttonsToPress, ...additionalButtons];
-        if (additionalButtons.length > 0) {
-          let shouldSet =
-          !exploredJoltages.has(this.attributes.joules.join("")) ||
-          exploredJoltages.get(this.attributes.joules.join("")).length > totalButtons.length;
-          if (shouldSet) {
-            exploredJoltages.set(this.attributes.joules.join(""), totalButtons);
-            result = totalButtons;
-          }
-        } else {
-          const newQueueItem = buttonsToPress.concat([button]);
-          let [newIndicator, newJoltage] = this.pressButtons(newQueueItem);
-          const isMoreThanExistingResult = result.length > 0 && ((newQueueItem.length > result.length) || ((newQueueItem.length == result.length) && !this.isJoltageMet(newJoltage, this.attributes.joules)));
-
-          if (isMoreThanExistingResult) {
-            continue;
-          }
-
-          let [resultIndicator, resultJoltage] = this.pressButtons(result);
-          let indexesOfInterest = this.findJoltagesRemaining(newJoltage);
-          let includesAtLeastOne = indexesOfInterest.some(index => button.includes(index))
-          if (includesAtLeastOne || this.isJoltageMet(newJoltage, this.attributes.joules)) {
-            let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, newJoltage, 10);
-            let minPresses = joltagesRemaining.reduce((arr: number, value: number, index: number) => {
-              return Math.max(arr, value);
-            }, 0);
-            if (result.length > 0 && minPresses > (result.length - newQueueItem.length)) continue;
-            queue.push(newQueueItem);
+        for (let j = i; j < sortedJoulesToFill.length; j++) {
+          let missingJoules = sortedJoulesToFill[j].joules - currentJoules[j];
+          if (missingJoules > 0) {
+            indexesWithMissingJoules.push(j);
+            amountMissing.push(missingJoules);
           }
         }
+        let buttonsOfInterest = this.attributes.buttons
+          .filter((button) => button.includes(sortedJoulesToFill[i].index))
+          .sort((a, b) => {
+            let aCounter = 0;
+            let bCounter = 0;
+            for (let button of a) {
+              if (indexesWithMissingJoules.includes(button)) {
+                aCounter++;
+              }
+            }
+            for (let button of b) {
+              if (indexesWithMissingJoules.includes(button)) {
+                bCounter++;
+              }
+            }
+            return bCounter - aCounter;
+          });
+
+        console.log(
+          "indexesWithMissingJoules:",
+          indexesWithMissingJoules,
+          "missingJoules",
+          missingJoules,
+          "amountMissing",
+          amountMissing,
+          "buttons:",
+          buttonsOfInterest
+        );
+        result.push(buttonsOfInterest[0]);
       }
     }
+    console.log(result);
     return result;
   }
 
