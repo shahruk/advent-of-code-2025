@@ -142,15 +142,15 @@ export class Machine {
     let sortedJoulesToFill = jouleMap.sort((a, b) => a.joules - b.joules);
     let result: Buttons = [];
     for (let i = 0; i < sortedJoulesToFill.length; i++) {
-      let missingJoules = Number.MAX_VALUE;
+      let missingJoules = sortedJoulesToFill[i].joules;
       while (missingJoules > 0) {
         let [position, currentJoules] = this.pressButtons(result);
         missingJoules = sortedJoulesToFill[i].joules - currentJoules[sortedJoulesToFill[i].index];
         if (missingJoules <= 0) continue;
         let indexesWithMissingJoules = [];
-        let amountMissing = [sortedJoulesToFill[i].index];
+        let amountMissing = [sortedJoulesToFill[i].joules];
 
-        for (let j = i; j < sortedJoulesToFill.length; j++) {
+        for (let j = i + 1; j < sortedJoulesToFill.length; j++) {
           let missingJoules = sortedJoulesToFill[j].joules - currentJoules[j];
           if (missingJoules > 0) {
             indexesWithMissingJoules.push(sortedJoulesToFill[j].index);
@@ -183,12 +183,14 @@ export class Machine {
             }
             return bCounter - aCounter;
           });
+          
         
 
 
         result.push(buttonsOfInterest[0]);
       }
     }
+    console.log(result);
     return result;
   }
 
