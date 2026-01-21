@@ -14,7 +14,6 @@ export class Machine {
   buttonsPressed: Buttons[] = [];
   input: string;
   constructor(input: string) {
-    console.log("Machine created!");
     this.input = input;
     this.attributes = this.parseLine(this.input);
     this.state = this.getInitialState();
@@ -146,50 +145,50 @@ export class Machine {
       let missingJoules = Number.MAX_VALUE;
       while (missingJoules > 0) {
         let [position, currentJoules] = this.pressButtons(result);
-        missingJoules = sortedJoulesToFill[i].joules - currentJoules[i];
+        missingJoules = sortedJoulesToFill[i].joules - currentJoules[sortedJoulesToFill[i].index];
         if (missingJoules <= 0) continue;
         let indexesWithMissingJoules = [];
-        let amountMissing = [];
+        let amountMissing = [sortedJoulesToFill[i].index];
 
         for (let j = i; j < sortedJoulesToFill.length; j++) {
           let missingJoules = sortedJoulesToFill[j].joules - currentJoules[j];
           if (missingJoules > 0) {
-            indexesWithMissingJoules.push(j);
-            amountMissing.push(missingJoules);
+            indexesWithMissingJoules.push(sortedJoulesToFill[j].index);
           }
+          amountMissing.push(missingJoules);
         }
         let buttonsOfInterest = this.attributes.buttons
           .filter((button) => button.includes(sortedJoulesToFill[i].index))
           .sort((a, b) => {
             let aCounter = 0;
+            let aTotal = 0;
             let bCounter = 0;
+            let bTotal = 0;
             for (let button of a) {
               if (indexesWithMissingJoules.includes(button)) {
                 aCounter++;
+                let index = indexesWithMissingJoules.indexOf(button);
+                aTotal += amountMissing[index];
               }
             }
             for (let button of b) {
               if (indexesWithMissingJoules.includes(button)) {
                 bCounter++;
+                let index = indexesWithMissingJoules.indexOf(button);
+                bTotal += amountMissing[index];
               }
+            } 
+            if (bCounter == aCounter) {
+              return bTotal - aTotal;
             }
             return bCounter - aCounter;
           });
+        
 
-        console.log(
-          "indexesWithMissingJoules:",
-          indexesWithMissingJoules,
-          "missingJoules",
-          missingJoules,
-          "amountMissing",
-          amountMissing,
-          "buttons:",
-          buttonsOfInterest
-        );
+
         result.push(buttonsOfInterest[0]);
       }
     }
-    console.log(result);
     return result;
   }
 
