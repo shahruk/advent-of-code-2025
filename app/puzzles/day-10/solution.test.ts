@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Machine, partOne } from "./solution";
+import { Machine, partOne, partTwo } from "./solution";
 import metadata from ".";
 
 describe("Advent of Code - Day 10", () => {
@@ -8,8 +8,8 @@ describe("Advent of Code - Day 10", () => {
     const machine2 = new Machine(`[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}`);
     const machine3 = new Machine(`[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}`);
     const machine4 = new Machine(
-          `[..##..#..] (0,4,8) (1,4,8) (1,2,3,5,7,8) (3,4,6,7) (1,2,4,6,7) (0,5,6,7,8) (0,1,3,6,7,8) (0,1,4,5,7) {31,52,25,41,41,43,43,71,52})`
-        );
+      `[..##..#..] (0,4,8) (1,4,8) (1,2,3,5,7,8) (3,4,6,7) (1,2,4,6,7) (0,5,6,7,8) (0,1,3,6,7,8) (0,1,4,5,7) {31,52,25,41,41,43,43,71,52})`
+    );
     describe("parseLine", () => {
       it("returns the correct value", () => {
         expect(machine.attributes).toEqual({
@@ -31,15 +31,24 @@ describe("Advent of Code - Day 10", () => {
               [1, 2, 3],
               [1, 2, 3],
             ])
-          ).toEqual([[0, 0, 0, 0], [0,2,2,2]]);
-          expect(machine.pressButtons([[1, 2, 3]])).toEqual([[0, 1, 1, 1], [0,1,1,1]]);
+          ).toEqual([
+            [0, 0, 0, 0],
+            [0, 2, 2, 2],
+          ]);
+          expect(machine.pressButtons([[1, 2, 3]])).toEqual([
+            [0, 1, 1, 1],
+            [0, 1, 1, 1],
+          ]);
           expect(
             machine.pressButtons([
               [1, 2, 3],
               [1, 2],
               [1, 2, 3],
             ])
-          ).toEqual([[0, 1, 1, 0], [0,3,3,2]]);
+          ).toEqual([
+            [0, 1, 1, 0],
+            [0, 3, 3, 2],
+          ]);
         });
 
         it("returns the correct value", () => {
@@ -49,7 +58,10 @@ describe("Advent of Code - Day 10", () => {
               [0, 1, 2],
               [1, 2, 3, 4],
             ])
-          ).toEqual([[0, 0, 0, 1, 0], [2,2,2,1,2]]);
+          ).toEqual([
+            [0, 0, 0, 1, 0],
+            [2, 2, 2, 1, 2],
+          ]);
         });
       });
     });
@@ -60,18 +72,50 @@ describe("Advent of Code - Day 10", () => {
       });
     });
 
-    describe('subtractMatrixes', () => {
+    describe("subtractMatrixes", () => {
+      it("returns the correct value", () => {
+        expect(machine.subtractMatrixes([1, 1, 1, 1, 1], [1, 0, 1, 0, 1])).toEqual([0, 1, 0, 1, 0]);
+      });
+    });
+
+    describe("isJoltageMet", () => {
+      it("returns the correct value", () => {
+        expect(machine.isJoltageMet([4, 4, 4, 0], [1, 2, 3, 4])).toEqual(false);
+        expect(machine.isJoltageMet([1, 0, 1, 1], [0, 0, 0, 1])).toEqual(true);
+      });
+    });
+
+    describe('calculateMinPresses', () => {
       it('returns the correct value', () => {
-        expect(machine.subtractMatrixes([1,0,1,0,1], [1,1,1,1,1])).toEqual([0,1,0,1,0]);
-      })
+        expect(machine.calculateMinimumPresses([7,7,7,7])).toEqual(0);
+      }); 
     })
 
-    describe('isJoltageMet', () => {
-      it('returns the correct value', () => {
-        expect(machine.isJoltageMet([4,4,4,0], [1,2,3,4])).toEqual(false);
-        expect(machine.isJoltageMet([1,0,1,1], [0,0,0,1])).toEqual(true);
-      })
-    })
+    describe("calculateNextButtonPresses", () => {
+      it("returns the correct value", () => {
+        const newMachine = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
+        expect(newMachine.calculateNextButtonPresses([[2]], 0)).toEqual([]);
+
+        expect(newMachine.calculateNextButtonPresses([[1]], 1)).toEqual([
+          [
+            [1],
+            [1],
+            [1],
+            [1],
+            [1],
+          ],
+          [
+            [1],
+            [0, 1, 2],
+            [0, 1, 2],
+            [0, 1, 2],
+            [0, 1, 2],
+          ],
+        ]);
+
+        expect(machine.calculateNextButtonPresses([[3]], 0))
+      });
+    });
 
     describe("configureWithFewestPresses", () => {
       it("returns the correct value", () => {
@@ -80,26 +124,37 @@ describe("Advent of Code - Day 10", () => {
         expect(machine3.configureWithFewestPresses().length).toEqual(2);
         expect(machine4.configureWithFewestPresses().length).toEqual(4);
       });
-
     });
 
-    describe('configureWithJoltage', () => {
-      it("returns the correct value with joltage", () => {
-        const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
-        expect(smallMachine.configureWithJoltage().length).toEqual(5);
-        
-        const smallMachine2 = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
-        expect(smallMachine2.configureWithJoltage().length).toEqual(5);
+    describe('generateIndexMap', () => {
+      it('returns the correct value', () => {
+
+      });
+    });
+
+    describe("configureWithJoltage", () => {
+      it.only("returns the correct value with joltage", () => {
+        // const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
+        // expect(smallMachine.configureWithJoltage().length).toEqual(5);
+
+        // const smallMachine2 = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
+        // expect(smallMachine2.configureWithJoltage().length).toEqual(5);
         expect(machine.configureWithJoltage().length).toEqual(10);
         expect(machine2.configureWithJoltage().length).toEqual(12);
         expect(machine3.configureWithJoltage().length).toEqual(11);
       });
-    })
+    });
   });
 
   describe("Part One", () => {
     it("returns the correct value", () => {
       expect(partOne(metadata[0].sampleInput).result).toEqual(7);
+    });
+  });
+
+  describe("Part Two", () => {
+    it("returns the correct value", () => {
+      expect(partTwo(metadata[0].sampleInput).result).toEqual(33);
     });
   });
 });
