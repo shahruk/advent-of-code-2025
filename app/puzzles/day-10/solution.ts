@@ -210,16 +210,17 @@ export class Machine {
     let buttonsToPress = this.getHighlightedButtons();
     let queue: Buttons[] = [...buttonsToPress.map(button => [button])];
     let existingJoules: {[key: string]: number} = {};
+    let maxByPresses: {[key: string]: number[]} = {};
     while (queue.length) {
       let path = queue.pop() as Buttons;
       buttonsToPress = this.getHighlightedButtons(path);
       let [, futureJoltage] = this.pressButtons(path as Buttons);
       
-      if (result.length) {
-        let minPresses = this.calculateMinimumPresses(futureJoltage);
-        // if (minPresses + path.length > result.length) continue;
+      // if (result.length) {
+      //   let minPresses = this.calculateMinimumPresses(futureJoltage);
+      //   // if (minPresses + path.length > result.length) continue;
 
-      }
+      // }
       if (!this.isJoltageMet(futureJoltage)) {
         if (result.length && path.length > result.length) {
           continue;
@@ -232,16 +233,31 @@ export class Machine {
           let newPath = path.concat([button]);
           let [, futureJoltage] = this.pressButtons(newPath);
           // let minPresses = this.calculateMinimumPresses(futureJoltage);
-          if (existingJoules[futureJoltage.join('')] && existingJoules[futureJoltage.join('')] <= newPath.length) {
+          const key = futureJoltage.join('');
+          if (existingJoules[key] && existingJoules[key] <= newPath.length) {
             continue;
           }
-          existingJoules[futureJoltage.join('')] = newPath.length;
+          existingJoules[key] = newPath.length;
           if (result.length && (newPath.length > result.length)) {
             // console.log('abandoning', JSON.stringify(path));
             continue;
           }
+          if (!maxByPresses[newPath.length]) {
+            maxByPresses[newPath.length] = futureJoltage;
+            queue.push(newPath);
+          } else {
+            let atLeastOneGreater = false;
+            for(let i = 0; i < maxByPresses[newPath.length].length; i++) {
+              if (futureJoltage[i] > maxByPresses[newPath.length][i]) {
+                atLeastOneGreater = true;
+                maxByPresses[newPath.length][i] = futureJoltage[i];
+              }
+              if (atLeastOneGreater) {
+                queue.push(newPath);
+              }
+            }
+          }
           // console.log('continuing', JSON.stringify(newPath))
-          queue.push(newPath);
         }
       } else {
         // console.log('joltage met', futureJoltage)
@@ -308,11 +324,11 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   contents.forEach((line) => {
     let machine = new Machine(line);
     const leastPresses = machine.configureWithJoltage();
-    messages.push(
-      `${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`
-    );
+    // messages.push(
+    //   `${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`
+    // );
     result += leastPresses.length;
   });
-  console.log(messages);
+  // console.log(messages);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
