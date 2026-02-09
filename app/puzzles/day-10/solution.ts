@@ -9,9 +9,9 @@ type PuzzleStructure = {
 };
 
 type QueueOperation = {
-      indexToMatch: number;
-      buttonsToPress: Buttons;
-}
+  indexToMatch: number;
+  buttonsToPress: Buttons;
+};
 
 export class Machine {
   attributes: PuzzleStructure;
@@ -46,10 +46,12 @@ export class Machine {
     let result: number[] = [...this.state];
     let joltage: number[] = Array(this.state.length).fill(0);
     let pressed: { [key: string]: number[] } = {};
-    for (let buttons of pressButtons) {
-      for (let button of buttons) {
-        if (!pressed[button.toString()]) pressed[button.toString()] = [button];
-        else pressed[button.toString()].push(button);
+    if (pressButtons?.length) {
+      for (let buttons of pressButtons) {
+        for (let button of buttons) {
+          if (!pressed[button.toString()]) pressed[button.toString()] = [button];
+          else pressed[button.toString()].push(button);
+        }
       }
     }
     for (let i = 0; i < result.length; i++) {
@@ -114,7 +116,7 @@ export class Machine {
     return results;
   }
 
-  isJoltageMet(currentJoltage: number[], targetJoltage: number[]): boolean {
+  isJoltageMet(currentJoltage: number[], targetJoltage: number[] = this.attributes.joules): boolean {
     for (let i = 0; i < currentJoltage.length; i++) {
       if (currentJoltage[i] < targetJoltage[i]) {
         return false;
@@ -134,7 +136,7 @@ export class Machine {
   calculateMinimumPresses(joltage: number[]) {
     let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage, 10);
     return joltagesRemaining.reduce((acc: number, value: number, index: number) => {
-      if (value > 0) return acc += value;
+      if (value > 0) return (acc += value);
       return acc;
     }, 0);
   }
@@ -148,130 +150,107 @@ export class Machine {
   }
 
   buttonsOfInterest(currentJoules: number[], buttonIndex: number) {
-    let buttonValuesOfInterest = this.calculateJoltageNotMetByIndex(currentJoules);
-    if (!buttonValuesOfInterest.includes(buttonIndex)) return [];
+    // let buttonValuesOfInterest = this.calculateJoltageNotMetByIndex(currentJoules);
+    // if (!buttonValuesOfInterest.includes(buttonIndex)) return [];
     let results = this.attributes.buttons.filter((button) => button.includes(buttonIndex));
     return results;
   }
 
+  // Find the different possibilities to reach the joule target
   calculateNextButtonPresses(buttons: Buttons, indexToMatch: number) {
     let results = [];
     let [position, currentJoules] = this.pressButtons(buttons);
     let buttonsOfInterest = this.buttonsOfInterest(currentJoules, indexToMatch);
-    let missingJoltages = this.calculateRemainingJoltages(currentJoules);
     for (let button of buttonsOfInterest) {
-      let buttonsPressed = [...buttons];
-      for (let i = currentJoules[indexToMatch]; i <= missingJoltages[indexToMatch]; i++) {
+      let buttonsPressed = [];
+      for (let i = currentJoules[indexToMatch]; i < this.attributes.joules[indexToMatch]; i++) {
         buttonsPressed.push(button);
       }
-      results.push(buttonsPressed)
+      if (buttonsPressed.length) {
+        results.push(buttonsPressed);
+      }
     }
     return results;
   }
 
   generateIndexMap(buttons: Buttons) {
-    for(let button of buttons) {
-      for(let index of button) {
-        console.log(index);
+    const counts = buttons.reduce((acc: { [key: string]: number }, pair) => {
+      const key = pair.join(",");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return counts;
+  }
+
+  getHighestJoltagesNeeded(joules: number[]) {
+    let difference = this.subtractMatrixes(this.attributes.joules, joules, 10);
+    return [...new Set(difference)].sort((a,b) => b - a);
+  }
+
+  getHighlightedButtons(presses: Buttons = []) {
+    let [, futureJoules] = this.pressButtons(presses);
+    let difference = this.subtractMatrixes(this.attributes.joules, futureJoules, 10);
+    let sortedDifference = [...new Set(difference)].sort((a,b) => b - a);
+    let highestJoltages = this.getHighestJoltagesNeeded(futureJoules);
+    let indexes = [];
+    for(let [index, joule] of difference.entries()) {
+
+      if (joule === highestJoltages[0]) {
+        indexes.push(index);
       }
     }
+    return this.attributes.buttons.filter(button => button.some(index => indexes.includes(index)));
   }
 
   configureWithJoltage() {
-    const jouleMap = this.attributes.joules.map((item: number, index: number) => {
-      return { index, joules: item };
-    });
-    let mostEfficientAtPress = new Map();
     let result: Buttons = [];
+    let currentMinimum = Number.MAX_VALUE;
+    let currentPaths: Buttons[][] = [];
     let iterations = 0;
-    let queue: QueueOperation[] = [];
-    for(let button of this.attributes.buttons) {
-      queue.push({ indexToMatch: 0, buttonsToPress: [button] });
-    }
+    let buttonsToPress = this.getHighlightedButtons();
+    let queue: Buttons[] = [...buttonsToPress.map(button => [button])];
+    let existingJoules: {[key: string]: number} = {};
     while (queue.length) {
-      let { indexToMatch, buttonsToPress } = queue.shift() as QueueOperation;
-      let currentPresses = buttonsToPress.length;
-      let [position, currentJoules] = this.pressButtons(buttonsToPress);
-      let minPresses = this.calculateMinimumPresses(currentJoules);
-      let totalPressesRequiredInThisThread = minPresses + currentPresses;
-      let isTooManyPresses =
-        (mostEfficientAtPress.has(currentPresses) &&
-          mostEfficientAtPress.get(currentPresses).length < currentPresses) ||
-        (result.length > 0 && totalPressesRequiredInThisThread > result.length);
+      let path = queue.pop() as Buttons;
+      buttonsToPress = this.getHighlightedButtons(path);
+      let [, futureJoltage] = this.pressButtons(path as Buttons);
+      
+      if (result.length) {
+        let minPresses = this.calculateMinimumPresses(futureJoltage);
+        // if (minPresses + path.length > result.length) continue;
 
-        console.log(buttonsToPress)
-
-      if (minPresses === 0) {
-        let winCondition = result.length === 0 || totalPressesRequiredInThisThread < result.length;
-        console.log("WIN!!!!", buttonsToPress, winCondition);
-        if (winCondition) {
-          minPresses = totalPressesRequiredInThisThread;
-          result = buttonsToPress;
-        }
-        continue;
       }
-      if (isTooManyPresses) {
-        console.log('abandoning', buttonsToPress);
-        console.log("isTooManyPresses", isTooManyPresses);
-        continue;
-      }
-      let newButtonPresses = [];
-      while (newButtonPresses.length === 0 && indexToMatch <= this.attributes.joules.length) {
-        newButtonPresses = this.calculateNextButtonPresses(buttonsToPress, indexToMatch);
-        for(let newPresses of newButtonPresses) {
-          queue.push({indexToMatch: indexToMatch + 1, buttonsToPress: newPresses});
+      if (!this.isJoltageMet(futureJoltage)) {
+        if (result.length && path.length > result.length) {
+          continue;
         }
-        indexToMatch++;
+        if (iterations++ > 100000) {
+          // console.error('Breaking because over ' + queue.length,  path.length, result.length);
+          throw new Error('Breaking due to execution iteration overflow.')
+        }
+        for(let button of buttonsToPress) {
+          let newPath = path.concat([button]);
+          let [, futureJoltage] = this.pressButtons(newPath);
+          // let minPresses = this.calculateMinimumPresses(futureJoltage);
+          if (existingJoules[futureJoltage.join('')] && existingJoules[futureJoltage.join('')] <= newPath.length) {
+            continue;
+          }
+          existingJoules[futureJoltage.join('')] = newPath.length;
+          if (result.length && (newPath.length > result.length)) {
+            // console.log('abandoning', JSON.stringify(path));
+            continue;
+          }
+          // console.log('continuing', JSON.stringify(newPath))
+          queue.push(newPath);
+        }
+      } else {
+        // console.log('joltage met', futureJoltage)
+        if (!result.length || path.length < result.length) {
+          // console.log('storing result:', result);
+          result = path;
+        }
       }
     }
-
-    // for (let i = 0; i < sortedJoulesToFill.length; i++) {
-    //   let missingJoules = sortedJoulesToFill[i].joules;
-    //   while (missingJoules > 0) {
-    //     let [position, currentJoules] = this.pressButtons(result);
-    //     missingJoules = sortedJoulesToFill[i].joules - currentJoules[sortedJoulesToFill[i].index];
-    //     if (missingJoules <= 0) continue;
-    //     let indexesWithMissingJoules = [];
-    //     let amountMissing = [sortedJoulesToFill[i].joules];
-
-    //     for (let j = i + 1; j < sortedJoulesToFill.length; j++) {
-    //       let missingJoules = sortedJoulesToFill[j].joules - currentJoules[j];
-    //       if (missingJoules > 0) {
-    //         indexesWithMissingJoules.push(sortedJoulesToFill[j].index);
-    //       }
-    //       amountMissing.push(missingJoules);
-    //     }
-    //     let buttonsOfInterest = this.attributes.buttons
-    //       .filter((button) => button.includes(sortedJoulesToFill[i].index))
-    //       .sort((a, b) => {
-    //         let aCounter = 0;
-    //         let aTotal = 0;
-    //         let bCounter = 0;
-    //         let bTotal = 0;
-    //         for (let button of a) {
-    //           if (indexesWithMissingJoules.includes(button)) {
-    //             aCounter++;
-    //             let index = indexesWithMissingJoules.indexOf(button);
-    //             aTotal += amountMissing[index];
-    //           }
-    //         }
-    //         for (let button of b) {
-    //           if (indexesWithMissingJoules.includes(button)) {
-    //             bCounter++;
-    //             let index = indexesWithMissingJoules.indexOf(button);
-    //             bTotal += amountMissing[index];
-    //           }
-    //         }
-    //         if (bCounter == aCounter) {
-    //           return bTotal - aTotal;
-    //         }
-    //         return bCounter - aCounter;
-    //       });
-    //     queue.push(...buttonsOfInterest);
-    //     result.push(buttonsOfInterest[0]);
-    //   }
-    // }
-    console.log(result);
     return result;
   }
 
@@ -334,5 +313,6 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     );
     result += leastPresses.length;
   });
+  console.log(messages);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
