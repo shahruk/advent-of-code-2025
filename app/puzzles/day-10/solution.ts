@@ -136,7 +136,7 @@ export class Machine {
   calculateMinimumPresses(joltage: number[]) {
     let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage, 10);
     return joltagesRemaining.reduce((acc: number, value: number, index: number) => {
-      if (value > 0) return (acc += value);
+      if (value > 0) acc++;
       return acc;
     }, 0);
   }
@@ -199,12 +199,15 @@ export class Machine {
         indexes.push(index);
       }
     }
-    return this.attributes.buttons.filter(button => button.some(index => indexes.includes(index)));
+    let results = [...this.attributes.buttons.filter(button => button.some(index => indexes.includes(index)))];
+    // console.log('results:', results);
+    results.sort((a, b) => b.length - a.length);
+    // console.log('results sorted:', results);
+    return results;
   }
 
   configureWithJoltage() {
     let result: Buttons = [];
-    let currentMinimum = Number.MAX_VALUE;
     let currentPaths: Buttons[][] = [];
     let iterations = 0;
     let buttonsToPress = this.getHighlightedButtons();
@@ -214,14 +217,14 @@ export class Machine {
     while (queue.length) {
       let path = queue.pop() as Buttons;
       buttonsToPress = this.getHighlightedButtons(path);
-      let [, futureJoltage] = this.pressButtons(path as Buttons);
+      let [, currentJoltage] = this.pressButtons(path as Buttons);
       
       // if (result.length) {
       //   let minPresses = this.calculateMinimumPresses(futureJoltage);
       //   // if (minPresses + path.length > result.length) continue;
 
       // }
-      if (!this.isJoltageMet(futureJoltage)) {
+      if (!this.isJoltageMet(currentJoltage)) {
         if (result.length && path.length > result.length) {
           continue;
         }
@@ -230,9 +233,13 @@ export class Machine {
           throw new Error('Breaking due to execution iteration overflow.')
         }
         for(let button of buttonsToPress) {
+          let currentMinPresses = this.calculateMinimumPresses(currentJoltage);
           let newPath = path.concat([button]);
           let [, futureJoltage] = this.pressButtons(newPath);
-          // let minPresses = this.calculateMinimumPresses(futureJoltage);
+          let minPresses = this.calculateMinimumPresses(futureJoltage);
+          if (minPresses > currentMinPresses) {
+            // continue;
+          }
           const key = futureJoltage.join('');
           if (existingJoules[key] && existingJoules[key] <= newPath.length) {
             continue;
@@ -240,27 +247,28 @@ export class Machine {
           existingJoules[key] = newPath.length;
           if (result.length && (newPath.length > result.length)) {
             // console.log('abandoning', JSON.stringify(path));
-            continue;
+            // continue;
           }
-          if (!maxByPresses[newPath.length]) {
-            maxByPresses[newPath.length] = futureJoltage;
-            queue.push(newPath);
-          } else {
-            let atLeastOneGreater = false;
-            for(let i = 0; i < maxByPresses[newPath.length].length; i++) {
-              if (futureJoltage[i] > maxByPresses[newPath.length][i]) {
-                atLeastOneGreater = true;
-                maxByPresses[newPath.length][i] = futureJoltage[i];
-              }
-              if (atLeastOneGreater) {
-                queue.push(newPath);
-              }
-            }
-          }
+          queue.push(newPath);
+          // if (!maxByPresses[newPath.length]) {
+          //   maxByPresses[newPath.length] = futureJoltage;
+          //   queue.push(newPath);
+          // } else {
+          //   let atLeastOneGreater = false;
+          //   for(let i = 0; i < maxByPresses[newPath.length].length; i++) {
+          //     if (futureJoltage[i] >= maxByPresses[newPath.length][i]) {
+          //       atLeastOneGreater = true;
+          //       maxByPresses[newPath.length][i] = futureJoltage[i];
+          //     }
+          //     if (atLeastOneGreater) {
+          //       queue.push(newPath);
+          //     }
+          //   }
+          // }
           // console.log('continuing', JSON.stringify(newPath))
         }
       } else {
-        // console.log('joltage met', futureJoltage)
+        console.log('joltage met', currentJoltage)
         if (!result.length || path.length < result.length) {
           // console.log('storing result:', result);
           result = path;
