@@ -108,10 +108,10 @@ export class Machine {
     return results;
   }
 
-  subtractMatrixes(matrix1: number[], matrix2: number[], base = 2): number[] {
+  subtractMatrixes(matrix1: number[], matrix2: number[]): number[] {
     let results: number[] = [];
     for (let i = 0; i < matrix1.length; i++) {
-      results[i] = (matrix1[i] - matrix2[i]) % base;
+      results[i] = (matrix1[i] - matrix2[i]);
     }
     return results;
   }
@@ -134,7 +134,7 @@ export class Machine {
   }
 
   calculateMinimumPresses(joltage: number[]) {
-    let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage, 10);
+    let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage);
     return joltagesRemaining.reduce((acc: number, value: number, index: number) => {
       if (value > 0) acc++;
       return acc;
@@ -150,8 +150,6 @@ export class Machine {
   }
 
   buttonsOfInterest(currentJoules: number[], buttonIndex: number) {
-    // let buttonValuesOfInterest = this.calculateJoltageNotMetByIndex(currentJoules);
-    // if (!buttonValuesOfInterest.includes(buttonIndex)) return [];
     let results = this.attributes.buttons.filter((button) => button.includes(buttonIndex));
     return results;
   }
@@ -159,7 +157,7 @@ export class Machine {
   // Find the different possibilities to reach the joule target
   calculateNextButtonPresses(buttons: Buttons, indexToMatch: number) {
     let results = [];
-    let [position, currentJoules] = this.pressButtons(buttons);
+    let [, currentJoules] = this.pressButtons(buttons);
     let buttonsOfInterest = this.buttonsOfInterest(currentJoules, indexToMatch);
     for (let button of buttonsOfInterest) {
       let buttonsPressed = [];
@@ -183,14 +181,13 @@ export class Machine {
   }
 
   getHighestJoltagesNeeded(joules: number[]) {
-    let difference = this.subtractMatrixes(this.attributes.joules, joules, 10);
+    let difference = this.subtractMatrixes(this.attributes.joules, joules);
     return [...new Set(difference)].sort((a,b) => b - a);
   }
 
   getHighlightedButtons(presses: Buttons = []) {
     let [, futureJoules] = this.pressButtons(presses);
-    let difference = this.subtractMatrixes(this.attributes.joules, futureJoules, 10);
-    let sortedDifference = [...new Set(difference)].sort((a,b) => b - a);
+    let difference = this.subtractMatrixes(this.attributes.joules, futureJoules);
     let highestJoltages = this.getHighestJoltagesNeeded(futureJoules);
     let indexes = [];
     for(let [index, joule] of difference.entries()) {
@@ -200,77 +197,39 @@ export class Machine {
       }
     }
     let results = [...this.attributes.buttons.filter(button => button.some(index => indexes.includes(index)))];
-    // console.log('results:', results);
     results.sort((a, b) => b.length - a.length);
-    // console.log('results sorted:', results);
     return results;
   }
 
   configureWithJoltage() {
     let result: Buttons = [];
-    let currentPaths: Buttons[][] = [];
     let iterations = 0;
     let buttonsToPress = this.getHighlightedButtons();
     let queue: Buttons[] = [...buttonsToPress.map(button => [button])];
     let existingJoules: {[key: string]: number} = {};
-    let maxByPresses: {[key: string]: number[]} = {};
     while (queue.length) {
       let path = queue.pop() as Buttons;
       buttonsToPress = this.getHighlightedButtons(path);
       let [, currentJoltage] = this.pressButtons(path as Buttons);
-      
-      // if (result.length) {
-      //   let minPresses = this.calculateMinimumPresses(futureJoltage);
-      //   // if (minPresses + path.length > result.length) continue;
-
-      // }
       if (!this.isJoltageMet(currentJoltage)) {
         if (result.length && path.length > result.length) {
           continue;
         }
         if (iterations++ > 100000) {
-          // console.error('Breaking because over ' + queue.length,  path.length, result.length);
           throw new Error('Breaking due to execution iteration overflow.')
         }
         for(let button of buttonsToPress) {
-          let currentMinPresses = this.calculateMinimumPresses(currentJoltage);
           let newPath = path.concat([button]);
           let [, futureJoltage] = this.pressButtons(newPath);
-          let minPresses = this.calculateMinimumPresses(futureJoltage);
-          if (minPresses > currentMinPresses) {
-            // continue;
-          }
           const key = futureJoltage.join('');
           if (existingJoules[key] && existingJoules[key] <= newPath.length) {
             continue;
           }
           existingJoules[key] = newPath.length;
-          if (result.length && (newPath.length > result.length)) {
-            // console.log('abandoning', JSON.stringify(path));
-            // continue;
-          }
           queue.push(newPath);
-          // if (!maxByPresses[newPath.length]) {
-          //   maxByPresses[newPath.length] = futureJoltage;
-          //   queue.push(newPath);
-          // } else {
-          //   let atLeastOneGreater = false;
-          //   for(let i = 0; i < maxByPresses[newPath.length].length; i++) {
-          //     if (futureJoltage[i] >= maxByPresses[newPath.length][i]) {
-          //       atLeastOneGreater = true;
-          //       maxByPresses[newPath.length][i] = futureJoltage[i];
-          //     }
-          //     if (atLeastOneGreater) {
-          //       queue.push(newPath);
-          //     }
-          //   }
-          // }
-          // console.log('continuing', JSON.stringify(newPath))
         }
       } else {
-        console.log('joltage met', currentJoltage)
         if (!result.length || path.length < result.length) {
-          // console.log('storing result:', result);
           result = path;
         }
       }
