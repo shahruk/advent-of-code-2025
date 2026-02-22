@@ -111,7 +111,7 @@ export class Machine {
   subtractMatrixes(matrix1: number[], matrix2: number[]): number[] {
     let results: number[] = [];
     for (let i = 0; i < matrix1.length; i++) {
-      results[i] = (matrix1[i] - matrix2[i]);
+      results[i] = Math.max(0, (matrix1[i] - matrix2[i]));
     }
     return results;
   }
@@ -180,61 +180,102 @@ export class Machine {
     return counts;
   }
 
-  getHighestJoltagesNeeded(joules: number[]) {
-    let difference = this.subtractMatrixes(this.attributes.joules, joules);
+  getHighestJoltagesNeeded(joules: number[], targetJoltage = this.attributes.joules) {
+    let difference = this.subtractMatrixes(targetJoltage, joules);
     return [...new Set(difference)].sort((a,b) => b - a);
   }
 
-  getHighlightedButtons(presses: Buttons = []) {
+  getHighlightedButtons(presses: Buttons = [], targetJoltage = this.attributes.joules) {
     let [, futureJoules] = this.pressButtons(presses);
-    let difference = this.subtractMatrixes(this.attributes.joules, futureJoules);
-    let highestJoltages = this.getHighestJoltagesNeeded(futureJoules);
+    let difference = this.subtractMatrixes(targetJoltage, futureJoules);
+    let highestJoltages = this.getHighestJoltagesNeeded(targetJoltage, futureJoules);
     let indexes = [];
     for(let [index, joule] of difference.entries()) {
-
       if (joule === highestJoltages[0]) {
         indexes.push(index);
       }
     }
     let results = [...this.attributes.buttons.filter(button => button.some(index => indexes.includes(index)))];
-    results.sort((a, b) => b.length - a.length);
     return results;
   }
 
-  configureWithJoltage() {
+  findJoltageWithLeastPresses(targetJoltage: number[]) {
     let result: Buttons = [];
     let iterations = 0;
-    let buttonsToPress = this.getHighlightedButtons();
-    let queue: Buttons[] = [...buttonsToPress.map(button => [button])];
+    let queue: Buttons[] = [...this.attributes.buttons.map(button => [button])];
     let existingJoules: {[key: string]: number} = {};
     while (queue.length) {
       let path = queue.pop() as Buttons;
-      buttonsToPress = this.getHighlightedButtons(path);
+      let buttonsToPress = this.getHighlightedButtons(path, targetJoltage);
       let [, currentJoltage] = this.pressButtons(path as Buttons);
-      if (!this.isJoltageMet(currentJoltage)) {
-        if (result.length && path.length > result.length) {
-          continue;
+      if (this.isJoltageMet(currentJoltage, targetJoltage)) {
+        if (!result.length || path.length < result.length) {
+          result = path;
         }
-        if (iterations++ > 100000) {
+      } else {
+        if (iterations++ > 1000) {
           throw new Error('Breaking due to execution iteration overflow.')
         }
         for(let button of buttonsToPress) {
           let newPath = path.concat([button]);
           let [, futureJoltage] = this.pressButtons(newPath);
           const key = futureJoltage.join('');
-          if (existingJoules[key] && existingJoules[key] <= newPath.length) {
+          if (existingJoules[key] && existingJoules[key] < newPath.length) {
             continue;
           }
           existingJoules[key] = newPath.length;
           queue.push(newPath);
         }
-      } else {
-        if (!result.length || path.length < result.length) {
-          result = path;
-        }
       }
     }
     return result;
+  }
+
+  configureWithJoltage() {
+    let evens = [];
+    let odds = [];
+    let remainingAmount = [...this.attributes.joules];
+    let iterations = 0;
+
+    while (remainingAmount.filter(num => num > 0).length > 0) {
+      let topSubtraction = remainingAmount;
+      let bottomSubtraction = [];
+      for(let [index, num] of remainingAmount.entries()) {
+        if (num % 2 === 0) {
+          bottomSubtraction.push(num);
+        } else {
+          bottomSubtraction.push(num - 1);
+        }
+      }
+
+      let difference = this.subtractMatrixes(topSubtraction, bottomSubtraction);
+      if (bottomSubtraction.filter(num => num > 0).length > 0) {
+        evens.push(bottomSubtraction);
+      }
+      if (difference.filter(num => num > 0).length > 0) {
+        odds.push(difference);
+      }
+      remainingAmount = bottomSubtraction.map(num => num / 2);
+      if (remainingAmount.filter(num => num > 1).length === 0) {
+        evens.push(remainingAmount);
+        remainingAmount = [0];
+      }
+      if (iterations++ > 1000) {
+        console.error(this.attributes, 'Break! Too many executions!');
+        throw new Error('Break! Too many executions');
+      }
+    }
+      
+    console.log(this.attributes.joules,'odds:', odds, 'evens:', evens);
+    let results: number[] = [];
+    odds.map(odd => results.push(this.findJoltageWithLeastPresses(odd).length));
+    let evenAnswer = this.findJoltageWithLeastPresses(evens[evens.length - 1]).length;
+    results.push(evenAnswer * Math.pow(2, evens.length - 1));
+    console.log('results:', results);
+    return results.reduce((acc, num) => {
+      acc += num;
+      return acc;
+    }, 0);
   }
 
   /**
@@ -294,7 +335,7 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     // messages.push(
     //   `${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`
     // );
-    result += leastPresses.length;
+    result += leastPresses;
   });
   // console.log(messages);
   return { result, messages, benchmark: performance.now() - benchmark };
