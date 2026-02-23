@@ -132,8 +132,8 @@ describe("Advent of Code - Day 10", () => {
 
       it('returns the correct value with joltage', () => {
         expect(machine.configureWithJoltage()).toEqual(10);
-        // expect(machine2.configureWithJoltage()).toEqual(12);
-        // expect(machine3.configureWithJoltage()).toEqual(11);
+        expect(machine2.configureWithJoltage()).toEqual(12);
+        expect(machine3.configureWithJoltage()).toEqual(11);
       });
     });
   });
