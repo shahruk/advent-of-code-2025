@@ -95,7 +95,7 @@ export class Machine {
       if (exploredStates.has(futureState.join(""))) continue;
       exploredStates.set(futureState.join(""), futureState);
       if (iterations++ > 5000) {
-        console.error("Fail at", futureState.join(""), "===", targetIndicators);
+        // console.error("Fail at", futureState.join(""), "===", targetIndicators);
         queue = [];
         return [];
       }
@@ -108,10 +108,10 @@ export class Machine {
     return results;
   }
 
-  subtractMatrixes(matrix1: number[], matrix2: number[]): number[] {
+  subtractMatrixes(matrix1: number[], matrix2: number[], minValue = Number.MAX_VALUE): number[] {
     let results: number[] = [];
     for (let i = 0; i < matrix1.length; i++) {
-      results[i] = Math.max(0, (matrix1[i] - matrix2[i]));
+      results[i] = Math.min(minValue, matrix1[i] - matrix2[i]);
     }
     return results;
   }
@@ -182,7 +182,7 @@ export class Machine {
 
   getHighestJoltagesNeeded(joules: number[], targetJoltage = this.attributes.joules) {
     let difference = this.subtractMatrixes(targetJoltage, joules);
-    return [...new Set(difference)].sort((a,b) => b - a);
+    return [...new Set(difference)].sort((a, b) => b - a);
   }
 
   getHighlightedButtons(presses: Buttons = [], targetJoltage = this.attributes.joules) {
@@ -190,20 +190,20 @@ export class Machine {
     let difference = this.subtractMatrixes(targetJoltage, futureJoules);
     let highestJoltages = this.getHighestJoltagesNeeded(futureJoules, targetJoltage);
     let indexes = [];
-    for(let [index, joule] of difference.entries()) {
+    for (let [index, joule] of difference.entries()) {
       if (joule === highestJoltages[0]) {
         indexes.push(index);
       }
     }
-    let results = [...this.attributes.buttons.filter(button => button.some(index => indexes.includes(index)))];
+    let results = [...this.attributes.buttons.filter((button) => button.some((index) => indexes.includes(index)))];
     return results;
   }
 
-  findJoltageWithLeastPresses(targetJoltage: number[], existingJoules: {[key: string]: number} = {}) {
+  findJoltageWithLeastPresses(targetJoltage: number[], existingJoules: { [key: string]: number } = {}) {
     let result: Buttons = [];
     let iterations = 0;
-    let queue: Buttons[] = [...this.attributes.buttons.map(button => [button])];
-    if (targetJoltage.filter(num => num > 0).length === 0) return result;
+    let queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    if (targetJoltage.filter((num) => num > 0).length === 0) return result;
     while (queue.length) {
       let path = queue.pop() as Buttons;
       let buttonsToPress = this.getHighlightedButtons(path, targetJoltage);
@@ -214,12 +214,12 @@ export class Machine {
         }
       } else {
         if (iterations++ > 10000) {
-          throw new Error('Breaking due to execution iteration overflow.')
+          throw new Error("Breaking due to execution iteration overflow.");
         }
-        for(let button of buttonsToPress) {
+        for (let button of buttonsToPress) {
           let newPath = path.concat([button]);
           let [, futureJoltage] = this.pressButtons(newPath);
-          const key = futureJoltage.join('');
+          const key = futureJoltage.join("");
           if (existingJoules[key] && existingJoules[key] <= newPath.length) {
             continue;
           }
@@ -231,15 +231,100 @@ export class Machine {
     return result;
   }
 
-  configureWithJoltage(targetJoules = this.attributes.joules, knownJoltages = {}) {
-    if (targetJoules.filter(num => num > 0).length === 0) {
+  configureWithJoltage(targetJoules = this.attributes.joules, knownStates: Record<string, Buttons> = {}) {
+    if (targetJoules.filter((num) => num > 0).length === 0) {
       return 0;
     }
-    if (targetJoules.filter(num => num <= 1).length > 0) return this.findJoltageWithLeastPresses(targetJoules, knownJoltages).length;
-    let newEvenRemainder = targetJoules.map(num => num % 2 == 0 ? num : num - 1);
-    let oddRemainder = this.subtractMatrixes(targetJoules, newEvenRemainder);
-    if (oddRemainder.includes(0)) return this.findJoltageWithLeastPresses(targetJoules, knownJoltages).length;
-    return (2 * this.configureWithJoltage(newEvenRemainder.map(num => num / 2))) + this.findJoltageWithLeastPresses(oddRemainder, knownJoltages).length;
+
+    // Create a map of known joltages
+    const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    const potentialOffsetPresses = [];
+    let result = 0;
+    while (queue.length) {
+      const path = queue.pop() as Buttons;
+      const [futureState, futureJoltage] = this.pressButtons(path);
+      const key = futureState.join("");
+      const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
+      const allEvenRemaining = remainder.filter((num) => num > 0 && num % 2 !== 0).length === 0;
+      // console.log(remainder, allEvenRemaining, path);
+      if (allEvenRemaining) {
+        potentialOffsetPresses.push(path);
+      }
+      if (knownStates[key] && knownStates[key].length <= path.length) continue;
+      knownStates[key] = path;
+      for (let button of this.attributes.buttons) {
+        queue.push(path.concat([button]));
+      }
+    }
+
+    // console.log(knownStates);
+
+    const reduceToZero = (joules: number[], depth = 1): number => {
+      console.log('reduceToZero called with', joules, depth);
+      if (knownStates[joules.join("")]) return knownStates[joules.join("")].length;
+      if (joules.filter((num) => num < 0).length > 0) {
+        // console.log('returning -1');
+        return -1;
+      }
+      if (joules.filter((num) => num > 0).length === 0) {
+        // console.log('returning 0');
+        return 0;
+      }
+      if (joules.filter((num) => num > 1).length === 0) {
+        // console.log('returning 0');
+        return 0;
+      }
+      if (depth > joules.filter((num) => num > 1).length - 2) {
+        // console.log(joules, 'returning this.findJoltageWithLeastPresses(joules).length', this.findJoltageWithLeastPresses(joules).length);
+        return this.findJoltageWithLeastPresses(joules).length;
+      }
+      let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
+      let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder);
+      // console.log(joules, ' - ', newEvenRemainder, ' = ', oddRemainderMap)
+      let minStepsForHalfOfEven = reduceToZero(newEvenRemainder.map((num) => num % 2 === 0 ? num / 2 : num), depth + 1);
+      let minStepsForOdd = knownStates[oddRemainderMap.join('')] ? knownStates[oddRemainderMap.join('')].length : -1;
+      if (this.isJoltageMet(newEvenRemainder, joules)) {
+        minStepsForOdd = 0;
+      }
+      let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd >= 0 ? 2 * minStepsForHalfOfEven + minStepsForOdd : -1;
+      // console.log('newEvenRemainder:', newEvenRemainder, 'minStepsForHalfOfEven', minStepsForHalfOfEven, 'minStepsForOdd', oddRemainderMap, minStepsForOdd, 'for', joules, 'we return', answer);
+      // console.log('returning', answer, ' for', joules, minStepsForHalfOfEven, oddRemainderMap, minStepsForOdd);
+      return answer;
+    };
+    
+    let visitedJoltages: Record<string, number> = {};
+    // console.log(potentialOffsetPresses, 'potentialOffsetPresses');
+    for(let presses of potentialOffsetPresses) {
+      let [futureState, futureJoltage] = this.pressButtons(presses);
+      let remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage);
+      // let hasGreater = remainder.filter(num => num < 0).length > 0;
+      const key = futureJoltage.join('');
+      // if (hasGreater) continue;
+      if (visitedJoltages[key] && visitedJoltages[key] <= presses.length) {
+        // console.log('abandoning', presses);
+        continue;
+      }
+      visitedJoltages[key] = presses.length;
+      let difference = this.subtractMatrixes(this.attributes.joules, futureJoltage);
+      let minPresses = reduceToZero(difference);
+      if (minPresses <= 0) continue;
+      // console.log('minPresses:', minPresses, ' + ', presses.length, futureJoltage, visitedJoltages)
+      let currentResult = minPresses + presses.length;
+      // console.log(minPresses);
+      result = result === 0 ? currentResult : Math.min(result, currentResult);
+      // console.log(targetJoules, minPresses, presses);;
+    }
+
+
+    // if (targetJoules.filter(num => num <= 1).length > 0) return this.findJoltageWithLeastPresses(targetJoules, knownJoltages).length;
+    // let newEvenRemainder = targetJoules.map(num => num % 2 == 0 ? num : num - 1);
+    // let oddRemainder = this.subtractMatrixes(targetJoules, newEvenRemainder);
+    // let evenMinPresses = this.configureWithJoltage(newEvenRemainder.map(num => num / 2));
+    // let oddMinPresses = this.findJoltageWithLeastPresses(oddRemainder, knownJoltages).length;
+
+    // return (2 * evenMinPresses + oddMinPresses);
+
+    return result;
   }
 
   /**
@@ -301,6 +386,6 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     // );
     result += leastPresses;
   });
-  // console.log(messages);
+  console.log(messages);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
