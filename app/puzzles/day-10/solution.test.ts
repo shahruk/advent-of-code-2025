@@ -121,6 +121,11 @@ describe("Advent of Code - Day 10", () => {
 
     describe("configureWithJoltage", () => {
       it("returns the correct value with joltage", () => {
+        const smallMachine = new Machine(`[...] (0,1) (1,2) (0,2) {2,2,2}`);
+        expect(smallMachine.configureWithJoltage()).toEqual(3);
+      });
+
+      it("returns the correct value with joltage", () => {
         const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
         expect(smallMachine.configureWithJoltage()).toEqual(5);
       });

@@ -246,7 +246,6 @@ export class Machine {
       const key = futureState.join("");
       const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
       const allEvenRemaining = remainder.filter((num) => num > 0 && num % 2 !== 0).length === 0;
-      // console.log(remainder, allEvenRemaining, path);
       if (allEvenRemaining) {
         potentialOffsetPresses.push(path);
       }
@@ -257,72 +256,46 @@ export class Machine {
       }
     }
 
-    // console.log(knownStates);
-
     const reduceToZero = (joules: number[], depth = 1): number => {
-      console.log('reduceToZero called with', joules, depth);
       if (knownStates[joules.join("")]) return knownStates[joules.join("")].length;
       if (joules.filter((num) => num < 0).length > 0) {
-        // console.log('returning -1');
         return -1;
       }
       if (joules.filter((num) => num > 0).length === 0) {
-        // console.log('returning 0');
         return 0;
       }
       if (joules.filter((num) => num > 1).length === 0) {
-        // console.log('returning 0');
         return 0;
       }
       if (depth > joules.filter((num) => num > 1).length - 2) {
-        // console.log(joules, 'returning this.findJoltageWithLeastPresses(joules).length', this.findJoltageWithLeastPresses(joules).length);
         return this.findJoltageWithLeastPresses(joules).length;
       }
       let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
       let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder);
-      // console.log(joules, ' - ', newEvenRemainder, ' = ', oddRemainderMap)
       let minStepsForHalfOfEven = reduceToZero(newEvenRemainder.map((num) => num % 2 === 0 ? num / 2 : num), depth + 1);
       let minStepsForOdd = knownStates[oddRemainderMap.join('')] ? knownStates[oddRemainderMap.join('')].length : -1;
       if (this.isJoltageMet(newEvenRemainder, joules)) {
         minStepsForOdd = 0;
       }
       let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd >= 0 ? 2 * minStepsForHalfOfEven + minStepsForOdd : -1;
-      // console.log('newEvenRemainder:', newEvenRemainder, 'minStepsForHalfOfEven', minStepsForHalfOfEven, 'minStepsForOdd', oddRemainderMap, minStepsForOdd, 'for', joules, 'we return', answer);
-      // console.log('returning', answer, ' for', joules, minStepsForHalfOfEven, oddRemainderMap, minStepsForOdd);
       return answer;
     };
     
     let visitedJoltages: Record<string, number> = {};
-    // console.log(potentialOffsetPresses, 'potentialOffsetPresses');
     for(let presses of potentialOffsetPresses) {
       let [futureState, futureJoltage] = this.pressButtons(presses);
       let remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage);
-      // let hasGreater = remainder.filter(num => num < 0).length > 0;
       const key = futureJoltage.join('');
-      // if (hasGreater) continue;
       if (visitedJoltages[key] && visitedJoltages[key] <= presses.length) {
-        // console.log('abandoning', presses);
         continue;
       }
       visitedJoltages[key] = presses.length;
       let difference = this.subtractMatrixes(this.attributes.joules, futureJoltage);
       let minPresses = reduceToZero(difference);
       if (minPresses <= 0) continue;
-      // console.log('minPresses:', minPresses, ' + ', presses.length, futureJoltage, visitedJoltages)
       let currentResult = minPresses + presses.length;
-      // console.log(minPresses);
       result = result === 0 ? currentResult : Math.min(result, currentResult);
-      // console.log(targetJoules, minPresses, presses);;
     }
-
-
-    // if (targetJoules.filter(num => num <= 1).length > 0) return this.findJoltageWithLeastPresses(targetJoules, knownJoltages).length;
-    // let newEvenRemainder = targetJoules.map(num => num % 2 == 0 ? num : num - 1);
-    // let oddRemainder = this.subtractMatrixes(targetJoules, newEvenRemainder);
-    // let evenMinPresses = this.configureWithJoltage(newEvenRemainder.map(num => num / 2));
-    // let oddMinPresses = this.findJoltageWithLeastPresses(oddRemainder, knownJoltages).length;
-
-    // return (2 * evenMinPresses + oddMinPresses);
 
     return result;
   }
