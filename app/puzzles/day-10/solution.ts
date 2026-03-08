@@ -108,10 +108,10 @@ export class Machine {
     return results;
   }
 
-  subtractMatrixes(matrix1: number[], matrix2: number[], minValue = Number.MAX_VALUE): number[] {
+  subtractMatrixes(matrix1: number[], matrix2: number[], minValue = 0): number[] {
     let results: number[] = [];
     for (let i = 0; i < matrix1.length; i++) {
-      results[i] = Math.min(minValue, matrix1[i] - matrix2[i]);
+      results[i] = Math.max(minValue, matrix1[i] - matrix2[i]);
     }
     return results;
   }
@@ -231,70 +231,114 @@ export class Machine {
     return result;
   }
 
-  configureWithJoltage(targetJoules = this.attributes.joules, knownStates: Record<string, Buttons> = {}) {
+  getAllKnownStates(): Record<string, Buttons[]> {
+    const visitedJoltages: Record<string, number> = {};
+    const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    const results: Record<string, Buttons[]> = {};
+    let iterations = 0;
+    while (queue.length) {
+      (iterations++);
+      const path = queue.pop() as Buttons;
+      const [futureState, futureJoltage] = this.pressButtons(path);
+      const key = futureState.join("");
+      if (!results[key]) results[key] = [];
+      results[key].push(path);
+      for (let button of this.attributes.buttons) {
+        let newPath = path.concat([button]);
+        let [, newJoltage] = this.pressButtons(newPath);
+        if (visitedJoltages[newJoltage.join('')] && visitedJoltages[newJoltage.join('')] <= newPath.length) continue;
+        visitedJoltages[newJoltage.join('')] = newPath.length;
+        let existingPathJson = JSON.stringify(path);
+        let buttonJson = JSON.stringify(button);
+        if (existingPathJson.indexOf(buttonJson) >= 0) {
+          continue;
+        }
+        queue.push(newPath);
+      }
+    }
+
+    return results;
+  }
+
+  reduceToZero(joules: number[], knownStates: Record<string, Buttons[]> = this.getAllKnownStates(), depth = 1): number {
+    // if (knownStates[joules.join("")]) return knownStates[joules.join("")].length;
+    if (joules.filter((num) => num > 0).length === 0) {
+      return 0;
+    }
+    let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
+    let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder, 0);
+    let minStepsForHalfOfEven = this.reduceToZero(
+      newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num)),
+      knownStates,
+      depth + 1
+    );
+    let minStepsForOdd = this.findJoltageWithLeastPresses(oddRemainderMap);
+    let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd.length >= 0 ? 2 * minStepsForHalfOfEven + minStepsForOdd.length : -1;
+    // console.log(`${newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num))}: ${minStepsForHalfOfEven}, ${oddRemainderMap}: ${minStepsForOdd.length}`);
+    // console.log('oddSteps:', minStepsForOdd.length, 'evenStepsHalf:', minStepsForHalfOfEven)
+    console.log('reduceToZero joules and answer:', joules, answer);
+    return answer;
+  }
+
+  getStartingPressPaths(knownStates: Record<string, Buttons[]> = {}, knownJoltageMin: Record<string, number> = {}) {
+    const visitedJoltages: Record<string, number> = {};
+    const extraOddPresses = this.attributes.joules.map(num => num % 2 === 0 ? 0 : 1);
+    console.log('starting parity:', extraOddPresses)
+    const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    const results = [];
+    let iterations = 0;
+    while (queue.length) {
+      iterations++;
+      const path = queue.shift() as Buttons;
+      const [futureState, futureJoltage] = this.pressButtons(path);
+      const key = futureState.join("");
+      const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
+      const allEvenRemaining = remainder.filter((num) => num % 2 !== 0).length === 0;
+      if (visitedJoltages[futureJoltage.join("")] && visitedJoltages[futureJoltage.join("")] <= path.length) continue;
+      visitedJoltages[futureJoltage.join("")] = path.length;
+      if (allEvenRemaining && this.isJoltageMet(futureJoltage, extraOddPresses)) {
+        // console.log(path, futureJoltage, 'extra press:', extraOddPresses);
+        // console.log(futureState, futureJoltage)
+        // console.log(remainder, allEvenRemaining);
+        results.push(path);
+        continue;
+      }
+      // if (knownStates[key] && knownStates[key].length <= path.length) continue;
+      if (!knownStates[key]) knownStates[key] = [];
+      knownStates[key].push(path);
+      for (let button of this.attributes.buttons) {
+        let existingPathJson = JSON.stringify(path);
+        let buttonJson = JSON.stringify(button);
+        if (existingPathJson.indexOf(buttonJson) >= 0) {
+          // console.log(path, 'exists:', button);
+          continue;
+        }
+        queue.push(path.concat([button]));
+      }
+    }
+
+    console.log('it took', iterations, knownStates[extraOddPresses.join('')])
+
+    return results;
+  }
+
+  configureWithJoltage(targetJoules = this.attributes.joules, knownStates: Record<string, Buttons[]> = {}) {
     if (targetJoules.filter((num) => num > 0).length === 0) {
       return 0;
     }
 
     // Create a map of known joltages
-    const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
-    const potentialOffsetPresses = [];
+    const potentialOffsetPresses = this.getStartingPressPaths(knownStates);
     let result = 0;
-    while (queue.length) {
-      const path = queue.pop() as Buttons;
-      const [futureState, futureJoltage] = this.pressButtons(path);
-      const key = futureState.join("");
-      const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
-      const allEvenRemaining = remainder.filter((num) => num > 0 && num % 2 !== 0).length === 0;
-      if (allEvenRemaining) {
-        potentialOffsetPresses.push(path);
-      }
-      if (knownStates[key] && knownStates[key].length <= path.length) continue;
-      knownStates[key] = path;
-      for (let button of this.attributes.buttons) {
-        queue.push(path.concat([button]));
-      }
-    }
-
-    const reduceToZero = (joules: number[], depth = 1): number => {
-      if (knownStates[joules.join("")]) return knownStates[joules.join("")].length;
-      if (joules.filter((num) => num < 0).length > 0) {
-        return -1;
-      }
-      if (joules.filter((num) => num > 0).length === 0) {
-        return 0;
-      }
-      if (joules.filter((num) => num > 1).length === 0) {
-        return 0;
-      }
-      if (depth > joules.filter((num) => num > 1).length - 2) {
-        return this.findJoltageWithLeastPresses(joules).length;
-      }
-      let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
-      let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder);
-      let minStepsForHalfOfEven = reduceToZero(newEvenRemainder.map((num) => num % 2 === 0 ? num / 2 : num), depth + 1);
-      let minStepsForOdd = knownStates[oddRemainderMap.join('')] ? knownStates[oddRemainderMap.join('')].length : -1;
-      if (this.isJoltageMet(newEvenRemainder, joules)) {
-        minStepsForOdd = 0;
-      }
-      let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd >= 0 ? 2 * minStepsForHalfOfEven + minStepsForOdd : -1;
-      return answer;
-    };
-    
-    let visitedJoltages: Record<string, number> = {};
-    for(let presses of potentialOffsetPresses) {
+    console.log(potentialOffsetPresses);
+    for (let presses of potentialOffsetPresses) {
       let [futureState, futureJoltage] = this.pressButtons(presses);
-      let remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage);
-      const key = futureJoltage.join('');
-      if (visitedJoltages[key] && visitedJoltages[key] <= presses.length) {
-        continue;
-      }
-      visitedJoltages[key] = presses.length;
-      let difference = this.subtractMatrixes(this.attributes.joules, futureJoltage);
-      let minPresses = reduceToZero(difference);
-      if (minPresses <= 0) continue;
+      let difference = this.subtractMatrixes(targetJoules, futureJoltage, 0);
+      let minPresses = this.reduceToZero(difference, knownStates);
+      if (minPresses < 0) continue;
       let currentResult = minPresses + presses.length;
       result = result === 0 ? currentResult : Math.min(result, currentResult);
+      console.log('with', presses,' answer is ', result);
     }
 
     return result;
