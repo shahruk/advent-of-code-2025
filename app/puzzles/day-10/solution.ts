@@ -266,16 +266,17 @@ export class Machine {
       return 0;
     }
     let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
+    let greaterThanBaseTwo = joules.filter(joule => joule <= 1);
     let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder, 0);
-    let minStepsForHalfOfEven = this.reduceToZero(
+    let minStepsForHalfOfEven = greaterThanBaseTwo.length > 0 ? this.findJoltageWithLeastPresses(joules).length : this.reduceToZero(
       newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num)),
       knownStates,
       depth + 1
     );
-    let minStepsForOdd = this.findJoltageWithLeastPresses(oddRemainderMap);
-    let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd.length >= 0 ? 2 * minStepsForHalfOfEven + minStepsForOdd.length : -1;
+    let minStepsForOdd = greaterThanBaseTwo.length > 0 ? [] : this.findJoltageWithLeastPresses(oddRemainderMap);
+    let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd.length >= 0 ? (greaterThanBaseTwo.length > 0 ? 1 : 2) * minStepsForHalfOfEven + minStepsForOdd.length : -1;
     // console.log(`${newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num))}: ${minStepsForHalfOfEven}, ${oddRemainderMap}: ${minStepsForOdd.length}`);
-    // console.log('oddSteps:', minStepsForOdd.length, 'evenStepsHalf:', minStepsForHalfOfEven)
+    console.log('oddSteps:', oddRemainderMap, minStepsForOdd.length, 'evenStepsHalf:', minStepsForHalfOfEven)
     console.log('reduceToZero joules and answer:', joules, answer);
     return answer;
   }

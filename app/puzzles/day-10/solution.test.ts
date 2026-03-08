@@ -180,7 +180,7 @@ describe("Advent of Code - Day 10", () => {
       it('returns the correct value with joltage', () => {
         expect(machine.configureWithJoltage()).toEqual(10);
       });
-      it.only('returns the correct value with joltage', () => {
+      it('returns the correct value with joltage', () => {
         expect(machine2.configureWithJoltage()).toEqual(12);
       });
       it('returns the correct value with joltage', () => {
