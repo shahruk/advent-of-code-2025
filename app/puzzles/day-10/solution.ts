@@ -214,7 +214,7 @@ export class Machine {
           result = path;
         }
       } else {
-        if (iterations++ > 100000) {
+        if (iterations++ > 10000000) {
           console.log('error;', targetJoltage);
           throw new Error("Breaking due to execution iteration overflow.");
         }
@@ -246,15 +246,11 @@ export class Machine {
       if (!results[key]) results[key] = [];
       results[key].push(path);
       for (let button of this.attributes.buttons) {
+        if (path.some(buttonPress => JSON.stringify(buttonPress) === JSON.stringify(button))) continue;
         let newPath = path.concat([button]);
         let [, newJoltage] = this.pressButtons(newPath);
         if (visitedJoltages[newJoltage.join('')] && visitedJoltages[newJoltage.join('')] <= newPath.length) continue;
         visitedJoltages[newJoltage.join('')] = newPath.length;
-        let existingPathJson = JSON.stringify(path);
-        let buttonJson = JSON.stringify(button);
-        if (existingPathJson.indexOf(buttonJson) >= 0) {
-          continue;
-        }
         queue.push(newPath);
       }
     }
@@ -262,23 +258,52 @@ export class Machine {
     return results;
   }
 
-  reduceToZero(joules: number[], depth = 1): number {
-    console.log('reducetozero', joules);
-    if (joules.filter((num) => num > 0).length === 0) {
-      return 0;
-    }
-    let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
-    let maxButtonNum = [...this.attributes.buttons].sort((a,b) => b.length - a.length);
-    let greaterThanBaseTwo = joules.filter(joule => joule >= 1).length <= maxButtonNum[0].length + 1;
-    let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder, 0);
-    let minStepsForHalfOfEven = greaterThanBaseTwo ? this.findJoltageWithLeastPresses(joules).length : this.reduceToZero(
-      newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num)),
-      depth + 1
-    );
-    let minStepsForOdd = greaterThanBaseTwo ? [] : this.findJoltageWithLeastPresses(oddRemainderMap);
-    let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd.length >= 0 ? (greaterThanBaseTwo ? 1 : 2) * minStepsForHalfOfEven + minStepsForOdd.length : -1;
-    return answer;
+reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}, depth = 1): number {
+  if (targetJoules.every(num => num === 0)) {
+    return 0;
   }
+  const solutionParity = targetJoules.map(joule => joule % 2);
+  let potentialOffsetPresses = knownStates[solutionParity.join('')];
+  const potentialAdditionalExceedingParity = targetJoules.map(joule => joule === 0 ? 1 : joule % 2);
+  const potentialAltStates = knownStates[potentialAdditionalExceedingParity.join('')];
+  if (targetJoules.includes(0) && potentialOffsetPresses && potentialAltStates?.length > 0) potentialOffsetPresses = potentialOffsetPresses.concat(potentialAltStates);
+  let result = 0;
+  if (!potentialOffsetPresses) {
+    console.log(targetJoules, solutionParity, knownStates, ' IMPOSSIBLE !');
+    return Number.MAX_VALUE;
+  }
+  for (let presses of potentialOffsetPresses) {
+    let [futureState, futureJoltage] = this.pressButtons(presses);
+    let difference = this.subtractMatrixes(targetJoules, futureJoltage, 0);
+    let minPresses = this.reduceToZero(difference.map(num => num / 2), knownStates);
+    if (minPresses < 0) continue;
+    console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
+    let currentResult = 2 * minPresses + presses.length;
+    result = result === 0 ? currentResult : Math.min(result, currentResult);
+  }
+  
+  console.log('reduceToZero called with', targetJoules, ' = ', result);
+  return result;
+
+
+  // let newEvenRemainder = targetJoules.map(num => (num % 2 === 0 ? num : num - 1));
+  // let halved = newEvenRemainder.map(num => num / 2);
+
+  // let endRecursion = targetJoules.filter(num => num <= 1).length >= 1;
+
+  // let oddRemainderMap = this.subtractMatrixes(targetJoules, newEvenRemainder, 0);
+
+  // if (endRecursion) {
+  //   return -10000000;
+  //   // return this.findJoltageWithLeastPresses(joules).length;
+  // } else {
+  //   let minStepsForHalfOfEven = this.reduceToZero(halved, knownStates, depth + 1);
+  //   let minStepsForOdd = this.findJoltageWithLeastPresses(oddRemainderMap);
+  //   return minStepsForHalfOfEven >= 0
+  //   ? 2 * minStepsForHalfOfEven + minStepsForOdd.length
+  //   : -1;
+  // }
+}
 
   getStartingPressPaths() {
     const visitedJoltages: Record<string, number> = {};
@@ -323,17 +348,8 @@ export class Machine {
     }
 
     // Create a map of known joltages
-    const potentialOffsetPresses = this.getStartingPressPaths();
-    let result = 0;
-    for (let presses of potentialOffsetPresses) {
-      let [futureState, futureJoltage] = this.pressButtons(presses);
-      let difference = this.subtractMatrixes(targetJoules, futureJoltage, 0);
-      let minPresses = this.reduceToZero(difference);
-      if (minPresses < 0) continue;
-      let currentResult = minPresses + presses.length;
-      result = result === 0 ? currentResult : Math.min(result, currentResult);
-    }
-
+    const knownStates = this.getAllKnownStates();
+    const result = this.reduceToZero(targetJoules, knownStates);
     return result;
   }
 
