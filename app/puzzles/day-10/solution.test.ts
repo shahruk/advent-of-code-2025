@@ -136,7 +136,6 @@ describe("Advent of Code - Day 10", () => {
       it('returns the correct value', () => {
         const smallMachine = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
         const paths = smallMachine.getStartingPressPaths();
-        console.log('paths:', paths);
         expect(paths.length).toEqual(3);
       })
 
@@ -187,7 +186,7 @@ describe("Advent of Code - Day 10", () => {
         expect(machine3.configureWithJoltage()).toEqual(11);
       });
       it('handles long inputs well', () => {
-        expect(new Machine(`[.#......#.] (2,9) (3,5,6,7,8) (0,7,8,9) (4) (0,2,3) (2,3,4,5,6,7,8,9) (1,2,3,7) (1,8) (0,2,5,6,9) (0,1,2,3,5,6,7) {59,48,81,71,11,42,42,70,42,42}`).configureWithJoltage()).not.toThrowError();
+        expect(new Machine(`[.#......#.] (2,9) (3,5,6,7,8) (0,7,8,9) (4) (0,2,3) (2,3,4,5,6,7,8,9) (1,2,3,7) (1,8) (0,2,5,6,9) (0,1,2,3,5,6,7) {59,48,81,71,11,42,42,70,42,42}`).configureWithJoltage()).toEqual(112);
       })
     });
   });

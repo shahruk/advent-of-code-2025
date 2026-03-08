@@ -18,6 +18,7 @@ export class Machine {
   state: number[] = [];
   buttonsPressed: Buttons[] = [];
   input: string;
+  joltageCacheMap: Record<string, Buttons> = {};
   constructor(input: string) {
     this.input = input;
     this.attributes = this.parseLine(this.input);
@@ -213,7 +214,8 @@ export class Machine {
           result = path;
         }
       } else {
-        if (iterations++ > 10000) {
+        if (iterations++ > 100000) {
+          console.log('error;', targetJoltage);
           throw new Error("Breaking due to execution iteration overflow.");
         }
         for (let button of buttonsToPress) {
@@ -260,31 +262,27 @@ export class Machine {
     return results;
   }
 
-  reduceToZero(joules: number[], knownStates: Record<string, Buttons[]> = this.getAllKnownStates(), depth = 1): number {
-    // if (knownStates[joules.join("")]) return knownStates[joules.join("")].length;
+  reduceToZero(joules: number[], depth = 1): number {
+    console.log('reducetozero', joules);
     if (joules.filter((num) => num > 0).length === 0) {
       return 0;
     }
     let newEvenRemainder = joules.map((num) => (num % 2 == 0 ? num : num - 1));
-    let greaterThanBaseTwo = joules.filter(joule => joule <= 1);
+    let maxButtonNum = [...this.attributes.buttons].sort((a,b) => b.length - a.length);
+    let greaterThanBaseTwo = joules.filter(joule => joule >= 1).length <= maxButtonNum[0].length + 1;
     let oddRemainderMap = this.subtractMatrixes(joules, newEvenRemainder, 0);
-    let minStepsForHalfOfEven = greaterThanBaseTwo.length > 0 ? this.findJoltageWithLeastPresses(joules).length : this.reduceToZero(
+    let minStepsForHalfOfEven = greaterThanBaseTwo ? this.findJoltageWithLeastPresses(joules).length : this.reduceToZero(
       newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num)),
-      knownStates,
       depth + 1
     );
-    let minStepsForOdd = greaterThanBaseTwo.length > 0 ? [] : this.findJoltageWithLeastPresses(oddRemainderMap);
-    let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd.length >= 0 ? (greaterThanBaseTwo.length > 0 ? 1 : 2) * minStepsForHalfOfEven + minStepsForOdd.length : -1;
-    // console.log(`${newEvenRemainder.map((num) => (num % 2 === 0 ? num / 2 : num))}: ${minStepsForHalfOfEven}, ${oddRemainderMap}: ${minStepsForOdd.length}`);
-    console.log('oddSteps:', oddRemainderMap, minStepsForOdd.length, 'evenStepsHalf:', minStepsForHalfOfEven)
-    console.log('reduceToZero joules and answer:', joules, answer);
+    let minStepsForOdd = greaterThanBaseTwo ? [] : this.findJoltageWithLeastPresses(oddRemainderMap);
+    let answer = minStepsForHalfOfEven >= 0 && minStepsForOdd.length >= 0 ? (greaterThanBaseTwo ? 1 : 2) * minStepsForHalfOfEven + minStepsForOdd.length : -1;
     return answer;
   }
 
-  getStartingPressPaths(knownStates: Record<string, Buttons[]> = {}, knownJoltageMin: Record<string, number> = {}) {
+  getStartingPressPaths() {
     const visitedJoltages: Record<string, number> = {};
     const extraOddPresses = this.attributes.joules.map(num => num % 2 === 0 ? 0 : 1);
-    console.log('starting parity:', extraOddPresses)
     const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
     const results = [];
     let iterations = 0;
@@ -297,49 +295,43 @@ export class Machine {
       const allEvenRemaining = remainder.filter((num) => num % 2 !== 0).length === 0;
       if (visitedJoltages[futureJoltage.join("")] && visitedJoltages[futureJoltage.join("")] <= path.length) continue;
       visitedJoltages[futureJoltage.join("")] = path.length;
+
+      // Global cache
+      if (!this.joltageCacheMap[futureJoltage.join('')] || this.joltageCacheMap[futureJoltage.join('')].length > path.length) {
+        this.joltageCacheMap[futureJoltage.join('')] = path;
+      }
       if (allEvenRemaining && this.isJoltageMet(futureJoltage, extraOddPresses)) {
-        // console.log(path, futureJoltage, 'extra press:', extraOddPresses);
-        // console.log(futureState, futureJoltage)
-        // console.log(remainder, allEvenRemaining);
         results.push(path);
         continue;
       }
-      // if (knownStates[key] && knownStates[key].length <= path.length) continue;
-      if (!knownStates[key]) knownStates[key] = [];
-      knownStates[key].push(path);
       for (let button of this.attributes.buttons) {
-        let existingPathJson = JSON.stringify(path);
-        let buttonJson = JSON.stringify(button);
-        if (existingPathJson.indexOf(buttonJson) >= 0) {
-          // console.log(path, 'exists:', button);
+        let buttonExistsInPath = path.some(item => JSON.stringify(item) === JSON.stringify(button));
+        if (buttonExistsInPath) {
           continue;
         }
         queue.push(path.concat([button]));
       }
     }
 
-    console.log('it took', iterations, knownStates[extraOddPresses.join('')])
 
     return results;
   }
 
-  configureWithJoltage(targetJoules = this.attributes.joules, knownStates: Record<string, Buttons[]> = {}) {
+  configureWithJoltage(targetJoules = this.attributes.joules) {
     if (targetJoules.filter((num) => num > 0).length === 0) {
       return 0;
     }
 
     // Create a map of known joltages
-    const potentialOffsetPresses = this.getStartingPressPaths(knownStates);
+    const potentialOffsetPresses = this.getStartingPressPaths();
     let result = 0;
-    console.log(potentialOffsetPresses);
     for (let presses of potentialOffsetPresses) {
       let [futureState, futureJoltage] = this.pressButtons(presses);
       let difference = this.subtractMatrixes(targetJoules, futureJoltage, 0);
-      let minPresses = this.reduceToZero(difference, knownStates);
+      let minPresses = this.reduceToZero(difference);
       if (minPresses < 0) continue;
       let currentResult = minPresses + presses.length;
       result = result === 0 ? currentResult : Math.min(result, currentResult);
-      console.log('with', presses,' answer is ', result);
     }
 
     return result;
@@ -404,6 +396,5 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
     // );
     result += leastPresses;
   });
-  console.log(messages);
   return { result, messages, benchmark: performance.now() - benchmark };
 };
