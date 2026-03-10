@@ -166,7 +166,7 @@ describe("Advent of Code - Day 10", () => {
         expect(smallMachine.configureWithJoltage()).toEqual(3);
       });
 
-      it.only("returns the correct value with joltage", () => {
+      it("returns the correct value with joltage", () => {
         const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
         expect(smallMachine.configureWithJoltage()).toEqual(5);
       });
@@ -183,6 +183,7 @@ describe("Advent of Code - Day 10", () => {
         expect(machine2.configureWithJoltage()).toEqual(12);
       });
       it('returns the correct value with joltage', () => {
+        expect(machine3.reduceToZero([4,4,4,2,4,2])).toEqual(4);
         expect(machine3.configureWithJoltage()).toEqual(11);
       });
       it('handles long inputs well', () => {

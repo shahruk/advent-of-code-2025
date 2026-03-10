@@ -258,28 +258,34 @@ export class Machine {
     return results;
   }
 
-reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}, depth = 1): number {
+reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}, knownReductions: Record<string, number> = {}, depth = 1): number {
   if (targetJoules.every(num => num === 0)) {
     return 0;
   }
+  if (Object.keys(knownStates).length === 0) {
+    knownStates = this.getAllKnownStates();
+  }
+  if (knownReductions[targetJoules.join('')]) return knownReductions[targetJoules.join('')];
+  console.log('reduceToZero called with', targetJoules, knownStates['000000']);
   const solutionParity = targetJoules.map(joule => joule % 2);
-  let potentialOffsetPresses = knownStates[solutionParity.join('')];
+  const solutionAllEven = solutionParity.filter(num => num !== 0).length === 0;
+  let potentialOffsetPresses = knownStates[solutionParity.join('')] || [];
   const potentialAdditionalExceedingParity = targetJoules.map(joule => joule === 0 ? 1 : joule % 2);
   const potentialAltStates = knownStates[potentialAdditionalExceedingParity.join('')];
   if (targetJoules.includes(0) && potentialOffsetPresses && potentialAltStates?.length > 0) potentialOffsetPresses = potentialOffsetPresses.concat(potentialAltStates);
-  let result = 0;
-  if (!potentialOffsetPresses) {
-    console.log(targetJoules, solutionParity, knownStates, ' IMPOSSIBLE !');
-    return Number.MAX_VALUE;
-  }
+  let result = Number.MAX_VALUE;
   for (let presses of potentialOffsetPresses) {
     let [futureState, futureJoltage] = this.pressButtons(presses);
     let difference = this.subtractMatrixes(targetJoules, futureJoltage, 0);
-    let minPresses = this.reduceToZero(difference.map(num => num / 2), knownStates);
+    let minPresses = this.reduceToZero(difference.map(num => num / 2), knownStates, knownReductions);
     if (minPresses < 0) continue;
     console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
     let currentResult = 2 * minPresses + presses.length;
     result = result === 0 ? currentResult : Math.min(result, currentResult);
+  }
+  
+  if (solutionParity.filter(num => num != 0).length === 0) {
+    result = Math.min(result, 2 * this.reduceToZero(targetJoules.map(num => num / 2), knownStates, knownReductions));
   }
   
   console.log('reduceToZero called with', targetJoules, ' = ', result);
@@ -348,8 +354,7 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
     }
 
     // Create a map of known joltages
-    const knownStates = this.getAllKnownStates();
-    const result = this.reduceToZero(targetJoules, knownStates);
+    const result = this.reduceToZero(targetJoules);
     return result;
   }
 
