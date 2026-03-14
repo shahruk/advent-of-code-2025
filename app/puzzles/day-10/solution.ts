@@ -242,7 +242,7 @@ export class Machine {
       (iterations++);
       const path = queue.pop() as Buttons;
       const [futureState, futureJoltage] = this.pressButtons(path);
-      const key = futureState.join("");
+      const key = futureState.join(",m");
       if (!results[key]) results[key] = [];
       results[key].push(path);
       for (let button of this.attributes.buttons) {
@@ -265,8 +265,8 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
   if (Object.keys(knownStates).length === 0) {
     knownStates = this.getAllKnownStates();
   }
-  if (knownReductions[targetJoules.join('')]) return knownReductions[targetJoules.join('')];
-  console.log('reduceToZero called with', targetJoules, knownStates['000000']);
+  const key = targetJoules.join('');
+  if (knownReductions[key]) return knownReductions[key];
   const solutionParity = targetJoules.map(joule => joule % 2);
   const solutionAllEven = solutionParity.filter(num => num !== 0).length === 0;
   let potentialOffsetPresses = knownStates[solutionParity.join('')] || [];
@@ -276,39 +276,21 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
   let result = Number.MAX_VALUE;
   for (let presses of potentialOffsetPresses) {
     let [futureState, futureJoltage] = this.pressButtons(presses);
-    let difference = this.subtractMatrixes(targetJoules, futureJoltage, 0);
+    let difference = this.subtractMatrixes(targetJoules, futureJoltage, Number.NEGATIVE_INFINITY);
+    if (difference.filter(num => num  % 2 !== 0).length > 0) continue;
+    if (difference.some(num => num % 2 !== 0)) continue;
     let minPresses = this.reduceToZero(difference.map(num => num / 2), knownStates, knownReductions);
     if (minPresses < 0) continue;
-    console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
+    // console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
     let currentResult = 2 * minPresses + presses.length;
     result = result === 0 ? currentResult : Math.min(result, currentResult);
   }
   
-  if (solutionParity.filter(num => num != 0).length === 0) {
+  if (solutionAllEven) {
     result = Math.min(result, 2 * this.reduceToZero(targetJoules.map(num => num / 2), knownStates, knownReductions));
   }
-  
-  console.log('reduceToZero called with', targetJoules, ' = ', result);
+  knownReductions[key] = result;
   return result;
-
-
-  // let newEvenRemainder = targetJoules.map(num => (num % 2 === 0 ? num : num - 1));
-  // let halved = newEvenRemainder.map(num => num / 2);
-
-  // let endRecursion = targetJoules.filter(num => num <= 1).length >= 1;
-
-  // let oddRemainderMap = this.subtractMatrixes(targetJoules, newEvenRemainder, 0);
-
-  // if (endRecursion) {
-  //   return -10000000;
-  //   // return this.findJoltageWithLeastPresses(joules).length;
-  // } else {
-  //   let minStepsForHalfOfEven = this.reduceToZero(halved, knownStates, depth + 1);
-  //   let minStepsForOdd = this.findJoltageWithLeastPresses(oddRemainderMap);
-  //   return minStepsForHalfOfEven >= 0
-  //   ? 2 * minStepsForHalfOfEven + minStepsForOdd.length
-  //   : -1;
-  // }
 }
 
   getStartingPressPaths() {
@@ -321,15 +303,16 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
       iterations++;
       const path = queue.shift() as Buttons;
       const [futureState, futureJoltage] = this.pressButtons(path);
-      const key = futureState.join("");
+      const stateKey = futureState.join(",");
+      const joltageKey = futureJoltage.join(',');
       const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
       const allEvenRemaining = remainder.filter((num) => num % 2 !== 0).length === 0;
-      if (visitedJoltages[futureJoltage.join("")] && visitedJoltages[futureJoltage.join("")] <= path.length) continue;
-      visitedJoltages[futureJoltage.join("")] = path.length;
+      if (visitedJoltages[joltageKey] && visitedJoltages[joltageKey] <= path.length) continue;
+      visitedJoltages[joltageKey] = path.length;
 
       // Global cache
-      if (!this.joltageCacheMap[futureJoltage.join('')] || this.joltageCacheMap[futureJoltage.join('')].length > path.length) {
-        this.joltageCacheMap[futureJoltage.join('')] = path;
+      if (!this.joltageCacheMap[joltageKey] || this.joltageCacheMap[joltageKey].length > path.length) {
+        this.joltageCacheMap[joltageKey] = path;
       }
       if (allEvenRemaining && this.isJoltageMet(futureJoltage, extraOddPresses)) {
         results.push(path);
