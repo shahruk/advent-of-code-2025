@@ -43,7 +43,7 @@ export class Machine {
     return result;
   }
 
-pressButtons(presses: Buttons): [number[], number[]] {
+  pressButtons(presses: Buttons): [number[], number[]] {
     let result: number[] = [...this.state];
     let joltage: number[] = new Array(this.state.length).fill(0);
 
@@ -54,11 +54,11 @@ pressButtons(presses: Buttons): [number[], number[]] {
         joltage[lightIndex]++;
       }
     }
-    
+
     for (let i = 0; i < result.length; i++) {
       result[i] = (result[i] + joltage[i]) % 2;
     }
-    
+
     return [result, joltage];
   }
 
@@ -212,7 +212,7 @@ pressButtons(presses: Buttons): [number[], number[]] {
         }
       } else {
         if (iterations++ > 10000000) {
-          console.log('error;', targetJoltage);
+          console.log("error;", targetJoltage);
           throw new Error("Breaking due to execution iteration overflow.");
         }
         for (let button of buttonsToPress) {
@@ -236,17 +236,17 @@ pressButtons(presses: Buttons): [number[], number[]] {
     const results: Record<string, Buttons[]> = {};
     let iterations = 0;
     while (queue.length) {
-      (iterations++);
+      iterations++;
       const path = queue.pop() as Buttons;
       const [futureState, futureJoltage] = this.pressButtons(path);
       const key = futureState.join("");
       if (!results[key]) results[key] = [];
       results[key].push(path);
       for (let button of this.attributes.buttons) {
-        if (path.some(buttonPress => JSON.stringify(buttonPress) === JSON.stringify(button))) continue;
+        if (path.some((buttonPress) => JSON.stringify(buttonPress) === JSON.stringify(button))) continue;
         let newPath = path.concat([button]);
         let [, newJoltage] = this.pressButtons(newPath);
-        const joltageKey = newJoltage.join(',');
+        const joltageKey = newJoltage.join(",");
         if (visitedJoltages[joltageKey] && visitedJoltages[joltageKey] <= newPath.length) continue;
         visitedJoltages[joltageKey] = newPath.length;
         queue.push(newPath);
@@ -256,44 +256,62 @@ pressButtons(presses: Buttons): [number[], number[]] {
     return results;
   }
 
-reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}, knownReductions: Record<string, number> = {}, depth = 1): number {
-  if (targetJoules.every(num => num === 0)) {
-    return 0;
+  reduceToZero(
+    targetJoules: number[],
+    knownStates: Record<string, Buttons[]> = {},
+    knownReductions: Record<string, number> = {},
+    depth = 1
+  ): number {
+    if (targetJoules.every((num) => num === 0)) {
+      return 0;
+    }
+    if (Object.keys(knownStates).length === 0) {
+      knownStates = this.getAllKnownStates();
+    }
+    const key = targetJoules.join(",");
+    if (knownReductions[key]) return knownReductions[key];
+    const solutionParity = targetJoules.map((joule) => joule % 2);
+    const solutionAllEven = solutionParity.filter((num) => num !== 0).length === 0;
+    let potentialOffsetPresses = knownStates[solutionParity.join("")] || [];
+    const potentialAdditionalExceedingParity = targetJoules.map((joule) => (joule === 0 ? 1 : joule % 2));
+    const potentialAltStates = knownStates[potentialAdditionalExceedingParity.join("")];
+    if (targetJoules.includes(0) && potentialOffsetPresses && potentialAltStates?.length > 0)
+      potentialOffsetPresses = potentialOffsetPresses.concat(potentialAltStates);
+    let result = Number.MAX_VALUE;
+    for (let presses of potentialOffsetPresses) {
+      let [futureState, futureJoltage] = this.pressButtons(presses);
+      let difference = this.subtractMatrixes(targetJoules, futureJoltage, Number.NEGATIVE_INFINITY);
+      if (difference.filter((num) => num % 2 !== 0).length > 0) continue;
+      if (difference.some((num) => num % 2 !== 0)) continue;
+      let minPresses = this.reduceToZero(
+        difference.map((num) => num / 2),
+        knownStates,
+        knownReductions
+      );
+      if (minPresses < 0) continue;
+      // console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
+      let currentResult = 2 * minPresses + presses.length;
+      result = result === 0 ? currentResult : Math.min(result, currentResult);
+    }
+
+    if (solutionAllEven) {
+      result = Math.min(
+        result,
+        2 *
+          this.reduceToZero(
+            targetJoules.map((num) => num / 2),
+            knownStates,
+            knownReductions
+          )
+      );
+    }
+    knownReductions[key] = result;
+    return result;
   }
-  if (Object.keys(knownStates).length === 0) {
-    knownStates = this.getAllKnownStates();
-  }
-  const key = targetJoules.join(',');
-  if (knownReductions[key]) return knownReductions[key];
-  const solutionParity = targetJoules.map(joule => joule % 2);
-  const solutionAllEven = solutionParity.filter(num => num !== 0).length === 0;
-  let potentialOffsetPresses = knownStates[solutionParity.join('')] || [];
-  const potentialAdditionalExceedingParity = targetJoules.map(joule => joule === 0 ? 1 : joule % 2);
-  const potentialAltStates = knownStates[potentialAdditionalExceedingParity.join('')];
-  if (targetJoules.includes(0) && potentialOffsetPresses && potentialAltStates?.length > 0) potentialOffsetPresses = potentialOffsetPresses.concat(potentialAltStates);
-  let result = Number.MAX_VALUE;
-  for (let presses of potentialOffsetPresses) {
-    let [futureState, futureJoltage] = this.pressButtons(presses);
-    let difference = this.subtractMatrixes(targetJoules, futureJoltage, Number.NEGATIVE_INFINITY);
-    if (difference.filter(num => num  % 2 !== 0).length > 0) continue;
-    if (difference.some(num => num % 2 !== 0)) continue;
-    let minPresses = this.reduceToZero(difference.map(num => num / 2), knownStates, knownReductions);
-    if (minPresses < 0) continue;
-    // console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
-    let currentResult = 2 * minPresses + presses.length;
-    result = result === 0 ? currentResult : Math.min(result, currentResult);
-  }
-  
-  if (solutionAllEven) {
-    result = Math.min(result, 2 * this.reduceToZero(targetJoules.map(num => num / 2), knownStates, knownReductions));
-  }
-  knownReductions[key] = result;
-  return result;
-}
 
   getStartingPressPaths() {
     const visitedJoltages: Record<string, number> = {};
-    const extraOddPresses = this.attributes.joules.map(num => num % 2 === 0 ? 0 : 1);
+    const extraOddPresses = this.attributes.joules.map((num) => (num % 2 === 0 ? 0 : 1));
     const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
     const results = [];
     let iterations = 0;
@@ -302,7 +320,7 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
       const path = queue.shift() as Buttons;
       const [futureState, futureJoltage] = this.pressButtons(path);
       const stateKey = futureState.join(",");
-      const joltageKey = futureJoltage.join(',');
+      const joltageKey = futureJoltage.join(",");
       const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
       const allEvenRemaining = remainder.filter((num) => num % 2 !== 0).length === 0;
       if (visitedJoltages[joltageKey] && visitedJoltages[joltageKey] <= path.length) continue;
@@ -317,14 +335,13 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
         continue;
       }
       for (let button of this.attributes.buttons) {
-        let buttonExistsInPath = path.some(item => JSON.stringify(item) === JSON.stringify(button));
+        let buttonExistsInPath = path.some((item) => JSON.stringify(item) === JSON.stringify(button));
         if (buttonExistsInPath) {
           continue;
         }
         queue.push(path.concat([button]));
       }
     }
-
 
     return results;
   }
@@ -393,9 +410,7 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   contents.forEach((line) => {
     let machine = new Machine(line);
     const leastPresses = machine.configureWithJoltage();
-    messages.push(
-      `${machine} was configured by pressing ${leastPresses} buttons`
-    );
+    messages.push(`${machine} was configured by pressing ${leastPresses} buttons`);
     result += leastPresses;
   });
   return { result, messages, benchmark: performance.now() - benchmark };
