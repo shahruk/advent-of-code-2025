@@ -393,9 +393,9 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   contents.forEach((line) => {
     let machine = new Machine(line);
     const leastPresses = machine.configureWithJoltage();
-    // messages.push(
-    //   `${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`
-    // );
+    messages.push(
+      `${machine} was configured by pressing ${leastPresses} buttons`
+    );
     result += leastPresses;
   });
   return { result, messages, benchmark: performance.now() - benchmark };
