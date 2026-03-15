@@ -43,25 +43,22 @@ export class Machine {
     return result;
   }
 
-  pressButtons(pressButtons: Buttons): [number[], number[]] {
+pressButtons(presses: Buttons): [number[], number[]] {
     let result: number[] = [...this.state];
-    let joltage: number[] = Array(this.state.length).fill(0);
-    let pressed: { [key: string]: number[] } = {};
-    if (pressButtons?.length) {
-      for (let buttons of pressButtons) {
-        for (let button of buttons) {
-          if (!pressed[button.toString()]) pressed[button.toString()] = [button];
-          else pressed[button.toString()].push(button);
-        }
+    let joltage: number[] = new Array(this.state.length).fill(0);
+
+    for (let i = 0; i < presses.length; i++) {
+      let buttons = presses[i];
+      for (let j = 0; j < buttons.length; j++) {
+        let lightIndex = buttons[j];
+        joltage[lightIndex]++;
       }
     }
+    
     for (let i = 0; i < result.length; i++) {
-      let buttonPresses = pressed[i.toString()];
-      if (buttonPresses) {
-        result[i] = ((buttonPresses.length % 2) + result[i]) % 2;
-        joltage[i] += buttonPresses.length;
-      }
+      result[i] = (result[i] + joltage[i]) % 2;
     }
+    
     return [result, joltage];
   }
 
@@ -242,15 +239,16 @@ export class Machine {
       (iterations++);
       const path = queue.pop() as Buttons;
       const [futureState, futureJoltage] = this.pressButtons(path);
-      const key = futureState.join(",m");
+      const key = futureState.join("");
       if (!results[key]) results[key] = [];
       results[key].push(path);
       for (let button of this.attributes.buttons) {
         if (path.some(buttonPress => JSON.stringify(buttonPress) === JSON.stringify(button))) continue;
         let newPath = path.concat([button]);
         let [, newJoltage] = this.pressButtons(newPath);
-        if (visitedJoltages[newJoltage.join('')] && visitedJoltages[newJoltage.join('')] <= newPath.length) continue;
-        visitedJoltages[newJoltage.join('')] = newPath.length;
+        const joltageKey = newJoltage.join(',');
+        if (visitedJoltages[joltageKey] && visitedJoltages[joltageKey] <= newPath.length) continue;
+        visitedJoltages[joltageKey] = newPath.length;
         queue.push(newPath);
       }
     }
@@ -265,7 +263,7 @@ reduceToZero(targetJoules: number[], knownStates: Record<string, Buttons[]> = {}
   if (Object.keys(knownStates).length === 0) {
     knownStates = this.getAllKnownStates();
   }
-  const key = targetJoules.join('');
+  const key = targetJoules.join(',');
   if (knownReductions[key]) return knownReductions[key];
   const solutionParity = targetJoules.map(joule => joule % 2);
   const solutionAllEven = solutionParity.filter(num => num !== 0).length === 0;
