@@ -26,6 +26,7 @@ describe("Advent of Code - Day 10", () => {
 
       describe("pressButtons", () => {
         it("returns the correct value", () => {
+          expect(machine.pressButtons([])[1]).toEqual([0, 0, 0, 0]);
           expect(
             machine.pressButtons([
               [1, 2, 3],
@@ -76,6 +77,10 @@ describe("Advent of Code - Day 10", () => {
       it("returns the correct value", () => {
         expect(machine.subtractMatrixes([1, 1, 1, 1, 1], [1, 0, 1, 0, 1])).toEqual([0, 1, 0, 1, 0]);
       });
+
+      it("returns the correct value", () => {
+        expect(machine.subtractMatrixes([0, 1, 0], [1, 1, 1], 0)).toEqual([0, 0, 0]);
+      });
     });
 
     describe("isJoltageMet", () => {
@@ -85,35 +90,27 @@ describe("Advent of Code - Day 10", () => {
       });
     });
 
-    describe('calculateMinPresses', () => {
-      it('returns the correct value', () => {
-        expect(machine.calculateMinimumPresses([7,7,7,7])).toEqual(0);
-      }); 
-    })
+    describe("calculateMinPresses", () => {
+      it("returns the correct value", () => {
+        expect(machine.calculateMinimumPresses([7, 7, 7, 7])).toEqual(0);
+      });
+    });
 
     describe("calculateNextButtonPresses", () => {
       it("returns the correct value", () => {
         const newMachine = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
+        expect(newMachine.calculateNextButtonPresses([], 0)).toEqual([]);
         expect(newMachine.calculateNextButtonPresses([[2]], 0)).toEqual([]);
 
         expect(newMachine.calculateNextButtonPresses([[1]], 1)).toEqual([
+          [[1], [1], [1], [1]],
           [
-            [1],
-            [1],
-            [1],
-            [1],
-            [1],
-          ],
-          [
-            [1],
             [0, 1, 2],
             [0, 1, 2],
             [0, 1, 2],
             [0, 1, 2],
           ],
         ]);
-
-        expect(machine.calculateNextButtonPresses([[3]], 0))
       });
     });
 
@@ -126,22 +123,71 @@ describe("Advent of Code - Day 10", () => {
       });
     });
 
-    describe('generateIndexMap', () => {
-      it('returns the correct value', () => {
+    describe("getAllKnownStates", () => {
+      it("returns the correct value", () => {
+        const paths = machine.getAllKnownStates();
+        expect(Object.keys(paths).length).toEqual(16);
+      });
+    });
 
+    describe("getStartingPressPaths", () => {
+      it("returns the correct value", () => {
+        const smallMachine = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
+        const paths = smallMachine.getStartingPressPaths();
+        expect(paths.length).toEqual(3);
+      });
+
+      it("returns the correct value", () => {
+        const paths = machine.getStartingPressPaths();
+        expect(paths.length).toEqual(3);
+      });
+    });
+
+    describe.skip("reduceToZero", () => {
+      it("returns the correct value", () => {
+        const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
+        expect(smallMachine.reduceToZero(smallMachine.attributes.joules)).toEqual(5);
+      });
+      it("returns the correct value", () => {
+        const smallMachine = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
+        expect(smallMachine.reduceToZero(smallMachine.attributes.joules)).toEqual(5);
+      });
+      it("returns the correct value", () => {
+        expect(machine.reduceToZero(machine.attributes.joules)).toEqual(10);
       });
     });
 
     describe("configureWithJoltage", () => {
-      it.only("returns the correct value with joltage", () => {
-        // const smallMachine = new Machine(`[.#.] (1) {0,5,0}`);
-        // expect(smallMachine.configureWithJoltage().length).toEqual(5);
-
-        // const smallMachine2 = new Machine(`[.##] (1) (0,1,2) (2) {0,5,1}`);
-        // expect(smallMachine2.configureWithJoltage().length).toEqual(5);
-        expect(machine.configureWithJoltage().length).toEqual(10);
-        expect(machine2.configureWithJoltage().length).toEqual(12);
-        expect(machine3.configureWithJoltage().length).toEqual(11);
+      it("returns the correct value with joltage", () => {
+        expect(machine.configureWithJoltage()).toEqual(10);
+      });
+      it("returns the correct value with joltage", () => {
+        expect(machine2.configureWithJoltage()).toEqual(12);
+      });
+      it("returns the correct value with joltage", () => {
+        expect(machine3.reduceToZero([4, 4, 4, 2, 4, 2])).toEqual(4);
+        expect(machine3.configureWithJoltage()).toEqual(11);
+      });
+      it("returns the correct value with joltage", () => {
+        expect(
+          new Machine(
+            `[......##] (0,3,5,6,7) (4,5) (0,1,2,3,5,6) (0,1,2,6,7) (0,1,2,3,5,7) (0,1) (3,4,5,6,7) (0,2,5) (1,2,3,4,5,6) (2,5) {68,44,56,31,32,79,41,38}`
+          ).configureWithJoltage()
+        ).toEqual(102);
+      });
+      it("handles long inputs well", () => {
+        expect(
+          new Machine(
+            `[.#......#.] (2,9) (3,5,6,7,8) (0,7,8,9) (4) (0,2,3) (2,3,4,5,6,7,8,9) (1,2,3,7) (1,8) (0,2,5,6,9) (0,1,2,3,5,6,7) {59,48,81,71,11,42,42,70,42,42}`
+          ).configureWithJoltage()
+        ).toEqual(112);
+      });
+      it("handles long inputs well", () => {
+        expect(
+          new Machine(
+            `[.##...##..] (9) (4,9) (2,4,5,6) (2,3,4,5,7,8,9) (0,2,3,4,5,6,7,9) (2,3,8,9) (1,2,4,8) (2,3,6,7,8) (0,1,8,9) (0,2,4,5,6,8,9) (2,3,4,8,9) (5,8) (5,9) {44,29,89,38,189,79,57,24,89,211}`
+          ).configureWithJoltage()
+        ).toEqual(253);
       });
     });
   });
@@ -154,6 +200,21 @@ describe("Advent of Code - Day 10", () => {
 
   describe("Part Two", () => {
     it("returns the correct value", () => {
+      const machineTest = new Machine(`[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}`);
+      let [, futureJoltageTest] = machineTest.pressButtons([
+        [0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
+        [0, 1, 2, 4, 5],
+        [0, 1, 2, 4, 5],
+        [0, 1, 2, 4, 5],
+        [0, 1, 2, 4, 5],
+        [0, 1, 2, 4, 5],
+        [1, 2],
+      ]);
+
       expect(partTwo(metadata[0].sampleInput).result).toEqual(33);
     });
   });

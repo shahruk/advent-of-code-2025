@@ -9,15 +9,16 @@ type PuzzleStructure = {
 };
 
 type QueueOperation = {
-      indexToMatch: number;
-      buttonsToPress: Buttons;
-}
+  indexToMatch: number;
+  buttonsToPress: Buttons;
+};
 
 export class Machine {
   attributes: PuzzleStructure;
   state: number[] = [];
   buttonsPressed: Buttons[] = [];
   input: string;
+  joltageCacheMap: Record<string, Buttons> = {};
   constructor(input: string) {
     this.input = input;
     this.attributes = this.parseLine(this.input);
@@ -42,23 +43,22 @@ export class Machine {
     return result;
   }
 
-  pressButtons(pressButtons: Buttons): [number[], number[]] {
+  pressButtons(presses: Buttons): [number[], number[]] {
     let result: number[] = [...this.state];
-    let joltage: number[] = Array(this.state.length).fill(0);
-    let pressed: { [key: string]: number[] } = {};
-    for (let buttons of pressButtons) {
-      for (let button of buttons) {
-        if (!pressed[button.toString()]) pressed[button.toString()] = [button];
-        else pressed[button.toString()].push(button);
+    let joltage: number[] = new Array(this.state.length).fill(0);
+
+    for (let i = 0; i < presses.length; i++) {
+      let buttons = presses[i];
+      for (let j = 0; j < buttons.length; j++) {
+        let lightIndex = buttons[j];
+        joltage[lightIndex]++;
       }
     }
+
     for (let i = 0; i < result.length; i++) {
-      let buttonPresses = pressed[i.toString()];
-      if (buttonPresses) {
-        result[i] = ((buttonPresses.length % 2) + result[i]) % 2;
-        joltage[i] += buttonPresses.length;
-      }
+      result[i] = (result[i] + joltage[i]) % 2;
     }
+
     return [result, joltage];
   }
 
@@ -93,7 +93,7 @@ export class Machine {
       if (exploredStates.has(futureState.join(""))) continue;
       exploredStates.set(futureState.join(""), futureState);
       if (iterations++ > 5000) {
-        console.error("Fail at", futureState.join(""), "===", targetIndicators);
+        // console.error("Fail at", futureState.join(""), "===", targetIndicators);
         queue = [];
         return [];
       }
@@ -106,15 +106,15 @@ export class Machine {
     return results;
   }
 
-  subtractMatrixes(matrix1: number[], matrix2: number[], base = 2): number[] {
+  subtractMatrixes(matrix1: number[], matrix2: number[], minValue = 0): number[] {
     let results: number[] = [];
     for (let i = 0; i < matrix1.length; i++) {
-      results[i] = (matrix1[i] - matrix2[i]) % base;
+      results[i] = Math.max(minValue, matrix1[i] - matrix2[i]);
     }
     return results;
   }
 
-  isJoltageMet(currentJoltage: number[], targetJoltage: number[]): boolean {
+  isJoltageMet(currentJoltage: number[], targetJoltage: number[] = this.attributes.joules): boolean {
     for (let i = 0; i < currentJoltage.length; i++) {
       if (currentJoltage[i] < targetJoltage[i]) {
         return false;
@@ -132,9 +132,9 @@ export class Machine {
   }
 
   calculateMinimumPresses(joltage: number[]) {
-    let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage, 10);
+    let joltagesRemaining = this.subtractMatrixes(this.attributes.joules, joltage);
     return joltagesRemaining.reduce((acc: number, value: number, index: number) => {
-      if (value > 0) return acc += value;
+      if (value > 0) acc++;
       return acc;
     }, 0);
   }
@@ -148,130 +148,211 @@ export class Machine {
   }
 
   buttonsOfInterest(currentJoules: number[], buttonIndex: number) {
-    let buttonValuesOfInterest = this.calculateJoltageNotMetByIndex(currentJoules);
-    if (!buttonValuesOfInterest.includes(buttonIndex)) return [];
     let results = this.attributes.buttons.filter((button) => button.includes(buttonIndex));
     return results;
   }
 
+  // Find the different possibilities to reach the joule target
   calculateNextButtonPresses(buttons: Buttons, indexToMatch: number) {
     let results = [];
-    let [position, currentJoules] = this.pressButtons(buttons);
+    let [, currentJoules] = this.pressButtons(buttons);
     let buttonsOfInterest = this.buttonsOfInterest(currentJoules, indexToMatch);
-    let missingJoltages = this.calculateRemainingJoltages(currentJoules);
     for (let button of buttonsOfInterest) {
-      let buttonsPressed = [...buttons];
-      for (let i = currentJoules[indexToMatch]; i <= missingJoltages[indexToMatch]; i++) {
+      let buttonsPressed = [];
+      for (let i = currentJoules[indexToMatch]; i < this.attributes.joules[indexToMatch]; i++) {
         buttonsPressed.push(button);
       }
-      results.push(buttonsPressed)
+      if (buttonsPressed.length) {
+        results.push(buttonsPressed);
+      }
     }
     return results;
   }
 
   generateIndexMap(buttons: Buttons) {
-    for(let button of buttons) {
-      for(let index of button) {
-        console.log(index);
-      }
-    }
+    const counts = buttons.reduce((acc: { [key: string]: number }, pair) => {
+      const key = pair.join(",");
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return counts;
   }
 
-  configureWithJoltage() {
-    const jouleMap = this.attributes.joules.map((item: number, index: number) => {
-      return { index, joules: item };
-    });
-    let mostEfficientAtPress = new Map();
+  getHighestJoltagesNeeded(joules: number[], targetJoltage = this.attributes.joules) {
+    let difference = this.subtractMatrixes(targetJoltage, joules);
+    return [...new Set(difference)].sort((a, b) => b - a);
+  }
+
+  getHighlightedButtons(presses: Buttons = [], targetJoltage = this.attributes.joules) {
+    let [, futureJoules] = this.pressButtons(presses);
+    let difference = this.subtractMatrixes(targetJoltage, futureJoules);
+    let highestJoltages = this.getHighestJoltagesNeeded(futureJoules, targetJoltage);
+    let indexes = [];
+    for (let [index, joule] of difference.entries()) {
+      if (joule === highestJoltages[0]) {
+        indexes.push(index);
+      }
+    }
+    let results = [...this.attributes.buttons.filter((button) => button.some((index) => indexes.includes(index)))];
+    return results;
+  }
+
+  findJoltageWithLeastPresses(targetJoltage: number[], existingJoules: { [key: string]: number } = {}) {
     let result: Buttons = [];
     let iterations = 0;
-    let queue: QueueOperation[] = [];
-    for(let button of this.attributes.buttons) {
-      queue.push({ indexToMatch: 0, buttonsToPress: [button] });
-    }
+    let queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    if (targetJoltage.filter((num) => num > 0).length === 0) return result;
     while (queue.length) {
-      let { indexToMatch, buttonsToPress } = queue.shift() as QueueOperation;
-      let currentPresses = buttonsToPress.length;
-      let [position, currentJoules] = this.pressButtons(buttonsToPress);
-      let minPresses = this.calculateMinimumPresses(currentJoules);
-      let totalPressesRequiredInThisThread = minPresses + currentPresses;
-      let isTooManyPresses =
-        (mostEfficientAtPress.has(currentPresses) &&
-          mostEfficientAtPress.get(currentPresses).length < currentPresses) ||
-        (result.length > 0 && totalPressesRequiredInThisThread > result.length);
-
-        console.log(buttonsToPress)
-
-      if (minPresses === 0) {
-        let winCondition = result.length === 0 || totalPressesRequiredInThisThread < result.length;
-        console.log("WIN!!!!", buttonsToPress, winCondition);
-        if (winCondition) {
-          minPresses = totalPressesRequiredInThisThread;
-          result = buttonsToPress;
+      let path = queue.pop() as Buttons;
+      let buttonsToPress = this.getHighlightedButtons(path, targetJoltage);
+      let [, currentJoltage] = this.pressButtons(path as Buttons);
+      if (this.isJoltageMet(currentJoltage, targetJoltage)) {
+        if (!result.length || path.length < result.length) {
+          result = path;
         }
-        continue;
-      }
-      if (isTooManyPresses) {
-        console.log('abandoning', buttonsToPress);
-        console.log("isTooManyPresses", isTooManyPresses);
-        continue;
-      }
-      let newButtonPresses = [];
-      while (newButtonPresses.length === 0 && indexToMatch <= this.attributes.joules.length) {
-        newButtonPresses = this.calculateNextButtonPresses(buttonsToPress, indexToMatch);
-        for(let newPresses of newButtonPresses) {
-          queue.push({indexToMatch: indexToMatch + 1, buttonsToPress: newPresses});
+      } else {
+        if (iterations++ > 10000000) {
+          console.log("error;", targetJoltage);
+          throw new Error("Breaking due to execution iteration overflow.");
         }
-        indexToMatch++;
+        for (let button of buttonsToPress) {
+          let newPath = path.concat([button]);
+          let [, futureJoltage] = this.pressButtons(newPath);
+          const key = futureJoltage.join("");
+          if (existingJoules[key] && existingJoules[key] <= newPath.length) {
+            continue;
+          }
+          existingJoules[key] = newPath.length;
+          queue.push(newPath);
+        }
+      }
+    }
+    return result;
+  }
+
+  getAllKnownStates(): Record<string, Buttons[]> {
+    const visitedJoltages: Record<string, number> = {};
+    const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    const results: Record<string, Buttons[]> = {};
+    let iterations = 0;
+    while (queue.length) {
+      iterations++;
+      const path = queue.pop() as Buttons;
+      const [futureState, futureJoltage] = this.pressButtons(path);
+      const key = futureState.join("");
+      if (!results[key]) results[key] = [];
+      results[key].push(path);
+      for (let button of this.attributes.buttons) {
+        if (path.some((buttonPress) => JSON.stringify(buttonPress) === JSON.stringify(button))) continue;
+        let newPath = path.concat([button]);
+        let [, newJoltage] = this.pressButtons(newPath);
+        const joltageKey = newJoltage.join(",");
+        if (visitedJoltages[joltageKey] && visitedJoltages[joltageKey] <= newPath.length) continue;
+        visitedJoltages[joltageKey] = newPath.length;
+        queue.push(newPath);
       }
     }
 
-    // for (let i = 0; i < sortedJoulesToFill.length; i++) {
-    //   let missingJoules = sortedJoulesToFill[i].joules;
-    //   while (missingJoules > 0) {
-    //     let [position, currentJoules] = this.pressButtons(result);
-    //     missingJoules = sortedJoulesToFill[i].joules - currentJoules[sortedJoulesToFill[i].index];
-    //     if (missingJoules <= 0) continue;
-    //     let indexesWithMissingJoules = [];
-    //     let amountMissing = [sortedJoulesToFill[i].joules];
+    return results;
+  }
 
-    //     for (let j = i + 1; j < sortedJoulesToFill.length; j++) {
-    //       let missingJoules = sortedJoulesToFill[j].joules - currentJoules[j];
-    //       if (missingJoules > 0) {
-    //         indexesWithMissingJoules.push(sortedJoulesToFill[j].index);
-    //       }
-    //       amountMissing.push(missingJoules);
-    //     }
-    //     let buttonsOfInterest = this.attributes.buttons
-    //       .filter((button) => button.includes(sortedJoulesToFill[i].index))
-    //       .sort((a, b) => {
-    //         let aCounter = 0;
-    //         let aTotal = 0;
-    //         let bCounter = 0;
-    //         let bTotal = 0;
-    //         for (let button of a) {
-    //           if (indexesWithMissingJoules.includes(button)) {
-    //             aCounter++;
-    //             let index = indexesWithMissingJoules.indexOf(button);
-    //             aTotal += amountMissing[index];
-    //           }
-    //         }
-    //         for (let button of b) {
-    //           if (indexesWithMissingJoules.includes(button)) {
-    //             bCounter++;
-    //             let index = indexesWithMissingJoules.indexOf(button);
-    //             bTotal += amountMissing[index];
-    //           }
-    //         }
-    //         if (bCounter == aCounter) {
-    //           return bTotal - aTotal;
-    //         }
-    //         return bCounter - aCounter;
-    //       });
-    //     queue.push(...buttonsOfInterest);
-    //     result.push(buttonsOfInterest[0]);
-    //   }
-    // }
-    console.log(result);
+  reduceToZero(
+    targetJoules: number[],
+    knownStates: Record<string, Buttons[]> = {},
+    knownReductions: Record<string, number> = {},
+    depth = 1
+  ): number {
+    if (targetJoules.every((num) => num === 0)) {
+      return 0;
+    }
+    if (Object.keys(knownStates).length === 0) {
+      knownStates = this.getAllKnownStates();
+    }
+    const key = targetJoules.join(",");
+    if (knownReductions[key]) return knownReductions[key];
+    const solutionParity = targetJoules.map((joule) => joule % 2);
+    const solutionAllEven = solutionParity.filter((num) => num !== 0).length === 0;
+    let potentialOffsetPresses = knownStates[solutionParity.join("")] || [];
+    const potentialAdditionalExceedingParity = targetJoules.map((joule) => (joule === 0 ? 1 : joule % 2));
+    const potentialAltStates = knownStates[potentialAdditionalExceedingParity.join("")];
+    if (targetJoules.includes(0) && potentialOffsetPresses && potentialAltStates?.length > 0)
+      potentialOffsetPresses = potentialOffsetPresses.concat(potentialAltStates);
+    let result = Number.MAX_VALUE;
+    for (let presses of potentialOffsetPresses) {
+      let [futureState, futureJoltage] = this.pressButtons(presses);
+      let difference = this.subtractMatrixes(targetJoules, futureJoltage, Number.NEGATIVE_INFINITY);
+      if (difference.filter((num) => num % 2 !== 0).length > 0) continue;
+      if (difference.some((num) => num % 2 !== 0)) continue;
+      let minPresses = this.reduceToZero(
+        difference.map((num) => num / 2),
+        knownStates,
+        knownReductions
+      );
+      if (minPresses < 0) continue;
+      // console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
+      let currentResult = 2 * minPresses + presses.length;
+      result = result === 0 ? currentResult : Math.min(result, currentResult);
+    }
+
+    if (solutionAllEven) {
+      result = Math.min(
+        result,
+        2 *
+          this.reduceToZero(
+            targetJoules.map((num) => num / 2),
+            knownStates,
+            knownReductions
+          )
+      );
+    }
+    knownReductions[key] = result;
+    return result;
+  }
+
+  getStartingPressPaths() {
+    const visitedJoltages: Record<string, number> = {};
+    const extraOddPresses = this.attributes.joules.map((num) => (num % 2 === 0 ? 0 : 1));
+    const queue: Buttons[] = [...this.attributes.buttons.map((button) => [button])];
+    const results = [];
+    let iterations = 0;
+    while (queue.length) {
+      iterations++;
+      const path = queue.shift() as Buttons;
+      const [futureState, futureJoltage] = this.pressButtons(path);
+      const stateKey = futureState.join(",");
+      const joltageKey = futureJoltage.join(",");
+      const remainder = this.subtractMatrixes(this.attributes.joules, futureJoltage, 0);
+      const allEvenRemaining = remainder.filter((num) => num % 2 !== 0).length === 0;
+      if (visitedJoltages[joltageKey] && visitedJoltages[joltageKey] <= path.length) continue;
+      visitedJoltages[joltageKey] = path.length;
+
+      // Global cache
+      if (!this.joltageCacheMap[joltageKey] || this.joltageCacheMap[joltageKey].length > path.length) {
+        this.joltageCacheMap[joltageKey] = path;
+      }
+      if (allEvenRemaining && this.isJoltageMet(futureJoltage, extraOddPresses)) {
+        results.push(path);
+        continue;
+      }
+      for (let button of this.attributes.buttons) {
+        let buttonExistsInPath = path.some((item) => JSON.stringify(item) === JSON.stringify(button));
+        if (buttonExistsInPath) {
+          continue;
+        }
+        queue.push(path.concat([button]));
+      }
+    }
+
+    return results;
+  }
+
+  configureWithJoltage(targetJoules = this.attributes.joules) {
+    if (targetJoules.filter((num) => num > 0).length === 0) {
+      return 0;
+    }
+
+    // Create a map of known joltages
+    const result = this.reduceToZero(targetJoules);
     return result;
   }
 
@@ -329,10 +410,8 @@ export const partTwo = (userInput: string): PuzzleSolutionMetadata => {
   contents.forEach((line) => {
     let machine = new Machine(line);
     const leastPresses = machine.configureWithJoltage();
-    messages.push(
-      `${machine} was configured by pressing ${leastPresses.length} buttons: ${leastPresses.join(" and then ")}`
-    );
-    result += leastPresses.length;
+    messages.push(`${machine} was configured by pressing ${leastPresses} buttons`);
+    result += leastPresses;
   });
   return { result, messages, benchmark: performance.now() - benchmark };
 };
