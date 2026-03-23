@@ -59,16 +59,16 @@ export const findAllPathsThroughNodes = (
       return visitedCache[cacheKey];
     }
     if (futurePaths) {
-      for (let future of futurePaths) { 
+      for (let future of futurePaths) {
         if (future === endKey) {
-          answer += (flagOneCaptured && flagTwoCaptured) ? 1 : 0;
+          answer += flagOneCaptured && flagTwoCaptured ? 1 : 0;
           continue;
         }
         answer += explore(
           future,
           base,
           flagOneCaptured || future === requiredNodes[0],
-          flagTwoCaptured || future === requiredNodes[1],
+          flagTwoCaptured || future === requiredNodes[1]
         );
       }
     }

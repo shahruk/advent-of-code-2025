@@ -4,22 +4,22 @@ import metadata, { sampleInput, sampleInputDayTwo } from ".";
 import { splitUserInputByCharacter } from "~/lib/utils";
 
 describe("Advent of Code - Day 11", () => {
-  describe('createNodeMap', () => {
-    it('returns a nodeMap', () => {
+  describe("createNodeMap", () => {
+    it("returns a nodeMap", () => {
       const nodeLines = splitUserInputByCharacter(sampleInput);
       const nodeMap = createNodeMap(nodeLines);
       expect(Object.keys(nodeMap).length).toEqual(nodeLines.length);
     });
   });
-  describe('partOne', () => {
-    it('returns the correct value', () => {
+  describe("partOne", () => {
+    it("returns the correct value", () => {
       expect(partOne(sampleInput).result).toEqual(5);
     });
   });
-  
-  describe('partTwo', () => {
-    it('returns the correct value', () => {
+
+  describe("partTwo", () => {
+    it("returns the correct value", () => {
       expect(partTwo(sampleInputDayTwo).result).toEqual(2);
     });
-  })
+  });
 });
