@@ -9,14 +9,17 @@ export class ProblemSolver {
   regionSizes: number[];
   constructor(userInput: string) {
     const contents = splitUserInputByCharacter(userInput);
-    const shapeLines = contents.filter(line => !line.includes('x'));
+    const shapeLines = contents.filter((line) => !line.includes("x"));
     const shapes = [];
-    this.regions = contents.filter(line => line.includes('x')).map(region => region.split(': ')[1]).map(line => line.split(' '));
-    let regionSizes = contents.filter(line => line.includes('x')).map(region => region.split(': ')[0]);
-    this.regionSizes = regionSizes.map(size => size.split('x').reduce((acc, value) => acc *= parseInt(value), 1));
+    this.regions = contents
+      .filter((line) => line.includes("x"))
+      .map((region) => region.split(": ")[1])
+      .map((line) => line.split(" "));
+    let regionSizes = contents.filter((line) => line.includes("x")).map((region) => region.split(": ")[0]);
+    this.regionSizes = regionSizes.map((size) => size.split("x").reduce((acc, value) => (acc *= parseInt(value)), 1));
     let acc: string[] = [];
-    for(let i = 0; i < shapeLines.length; i++) {
-      if (shapeLines[i].includes(':')) continue;
+    for (let i = 0; i < shapeLines.length; i++) {
+      if (shapeLines[i].includes(":")) continue;
       else if (!shapeLines[i].trim().length) {
         shapes.push(acc);
         acc = [];
@@ -32,7 +35,7 @@ export class ProblemSolver {
     this.regions.map((region, regionIndex) => {
       let isValid = true;
       let currentArea = 0;
-      for(let [index, presentsNeeded] of region.entries()) {
+      for (let [index, presentsNeeded] of region.entries()) {
         let needed = parseInt(presentsNeeded);
         let presentFill = this.shapes[index].join().match(/#/g)?.length || 0;
         while (needed-- > 0) {
@@ -46,7 +49,6 @@ export class ProblemSolver {
     });
     return result;
   }
-
 }
 
 export const partOne = (userInput: string): PuzzleSolutionMetadata => {

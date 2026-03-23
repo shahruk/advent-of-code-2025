@@ -42,8 +42,8 @@ const metadata: PuzzleMetadata[] = [
     prompt: `
 --- Day 12: Christmas Tree Farm ---
 `,
-    sampleInput: '',
-  }
+    sampleInput: "",
+  },
 ];
 
 export default metadata;
