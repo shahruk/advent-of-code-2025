@@ -3,16 +3,22 @@ import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { SolutionArea } from "~/components/solution-area";
 import { puzzles } from "~/puzzles";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { PuzzleMetadata } from "~/lib/types";
 
 export default function PuzzleDayPage() {
   const { id } = useParams<{ id: string }>();
-  let values: string[] = [];
-  const puzzleData = puzzles[parseInt(id as string)];
-  puzzleData.forEach((puzzle) => {
-    values.push(puzzle.sampleInput);
-  });
-  const [userValues, setUserValues] = useState<string[]>(values);
+  const [userValues, setUserValues] = useState<string[]>([]);
+  const [puzzleData, setPuzzleData] = useState<PuzzleMetadata[]>([]);
+  useEffect(() => {
+    let puzzleData = puzzles[parseInt(id as string)];
+    let values: string[] = [];
+    puzzleData.forEach((puzzle) => {
+      values.push(puzzle.sampleInput);
+    });
+    setPuzzleData(puzzleData);
+    setUserValues(values);
+  }, [id]);
 
   return (
     <div className="flex w-full min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -32,7 +38,7 @@ export default function PuzzleDayPage() {
               ))}
             </TabsList>
             {puzzleData.map((puzzle, index) => (
-              <TabsContent key={index + 1} value={(index + 1).toString()}>
+              <TabsContent key={`${id}:${index + 1}`} value={(index + 1).toString()}>
                 <div className="mb-4">
                   <Button asChild>
                     <a target="_blank" href={puzzle.srcUrl} rel="noopener noreferrer">
@@ -52,7 +58,7 @@ export default function PuzzleDayPage() {
                     defaultValue={userValues[index]}
                     solutionHandler={puzzle.solution}
                     onUserInputChanged={(value: string) => {
-                      if (value) {
+                      if (value !== undefined) {
                         let newUserValues = [...userValues];
                         newUserValues[index] = value;
                         setUserValues(newUserValues);
