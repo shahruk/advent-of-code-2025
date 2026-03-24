@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
@@ -31,6 +31,10 @@ export const SolutionArea = ({
     }
   };
 
+  useEffect(() => {
+    setUserAnswer(defaultValue);
+  }, [defaultValue]);
+
   const onUserInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setUserAnswer(e.target.value);
     onUserInputChanged(e.target.value);
@@ -38,7 +42,7 @@ export const SolutionArea = ({
   return (
     <div className="mt-2 grid w-full gap-3">
       <Label className="text-md">Your puzzle</Label>
-      <Textarea className="max-h-[50vh]" onChange={onUserInputChange} defaultValue={defaultValue} />
+      <Textarea className="max-h-[50vh]" onChange={onUserInputChange} value={defaultValue} />
       <Button onClick={() => onUserSubmit()}>Run</Button>
       {answer && (
         <div>
