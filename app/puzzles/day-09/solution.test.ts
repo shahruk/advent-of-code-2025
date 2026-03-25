@@ -70,9 +70,6 @@ describe("Advent of Code - Day 9", () => {
 16,7
 3,7
 3,2`;
-      console.log(drawGrid(outerRectangle));
-      console.log(drawGrid(innerRectangle));
-      console.log(drawGrid(doubleSquare));
       const redTilePositions = getRedTilePositions(doubleSquare);
       const greenTilePositions = getGreenTilePositions(doubleSquare);
       expect(isAllGreenOrRed([1, 0], [18, 11], redTilePositions, greenTilePositions)).toEqual(false);
@@ -112,7 +109,6 @@ describe("Advent of Code - Day 9", () => {
     });
 
     it("merges adjacent pairs", () => {
-      console.log(getGreenTilePositions(lShape)[1]);
       expect(getGreenTilePositions(lShape)[0]).toEqual({
         "1": [
           [1, 6],
@@ -323,7 +319,6 @@ describe("Advent of Code - Day 9", () => {
           0,4
           3,4
           3,0`;
-      console.log(drawGrid(input).join("\n"));
       expect(partTwo(input).result).toEqual(8);
     });
 

@@ -93,7 +93,6 @@ export class Machine {
       if (exploredStates.has(futureState.join(""))) continue;
       exploredStates.set(futureState.join(""), futureState);
       if (iterations++ > 5000) {
-        // console.error("Fail at", futureState.join(""), "===", targetIndicators);
         queue = [];
         return [];
       }
@@ -289,7 +288,6 @@ export class Machine {
         knownReductions
       );
       if (minPresses < 0) continue;
-      // console.log('Equation:', `${presses.length} + 2 * ${difference.map(num => num / 2)} (${minPresses})`)
       let currentResult = 2 * minPresses + presses.length;
       result = result === 0 ? currentResult : Math.min(result, currentResult);
     }
