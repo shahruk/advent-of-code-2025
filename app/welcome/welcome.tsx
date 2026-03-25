@@ -10,19 +10,41 @@ export function Welcome() {
             Welcome to Advent of Code 2025
           </h1>
           <p className="max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            This application lets you try this year's challenges in your web browser. All the code is Open Source and available <Button asChild size="sm"><a href="https://github.com/shahruk/advent-of-code-2025" target="_blank">on Github</a></Button>. Use the left menu to navigate to the puzzle day.
+            This application lets you try this year's challenges in your web browser. All the code is Open Source and
+            available{" "}
+            <Button asChild size="sm">
+              <a href="https://github.com/shahruk/advent-of-code-2025" target="_blank">
+                on Github
+              </a>
+            </Button>
+            . Use the left menu to navigate to the puzzle day.
           </p>
 
-          <h3 className="max-w-xl text-xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">About the Author</h3>
+          <h3 className="max-w-xl text-xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+            About the Author
+          </h3>
           <p className="max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Shahruk is a senior frontend engineer who previously worked at AWS Connect and led frontend content marketing architecture and design systems for a large beauty conglomerate.
+            Shahruk is a senior frontend engineer who previously worked at AWS Connect and led frontend content
+            marketing architecture and design systems for a large beauty conglomerate.
             <br />
-            <br />For more information you can visit their <Button asChild size="sm"><a href="https://shahruk.com/" target="_blank">personal website</a></Button>
+            <br />
+            For more information you can visit their{" "}
+            <Button asChild size="sm">
+              <a href="https://shahruk.com/" target="_blank">
+                personal website
+              </a>
+            </Button>
           </p>
 
           <Separator />
           <p className="max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Greatly inspired by <Button asChild variant="outline" size="sm"><a href="https://aoc.fornwall.net/" target="_blank" rel="noopener noreferrer">Fredrik Fornwall</a></Button>.
+            Greatly inspired by{" "}
+            <Button asChild variant="outline" size="sm">
+              <a href="https://aoc.fornwall.net/" target="_blank" rel="noopener noreferrer">
+                Fredrik Fornwall
+              </a>
+            </Button>
+            .
           </p>
         </div>
       </main>

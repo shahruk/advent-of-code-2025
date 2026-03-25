@@ -7,6 +7,7 @@ This is my second year attempting AoC and my first time completing it. I was gre
 This code is hosted publicly on [my personal website](https://adventofcode2025.shahruk.com/).
 
 ## Code Architecture
+
 The website is built using [React Router and shadcn](https://ui.shadcn.com/docs/installation/react-router). The puzzle solutions can be found in their respective `app/puzzles/day-${number}` folder. Each puzzle folder contains the following files:
 
 - `solution.ts` contains the solution code
@@ -22,6 +23,7 @@ Each day's puzzle `solution.ts` will contain a `partOne` and `partTwo` function 
 `benchmark` returns the solution runtime which is dependent on the user's browser and system performance
 
 ## Artificial Intelligence (AI)
+
 As the author of this package I attest that none of the code was written by AI. This was an intentional decision to build an Advent of Code solution browser for my own curiosity and learnings.
 
 ## Commands
@@ -47,6 +49,7 @@ Run eslint and fix the linting issues
 Generate a static HTML folder.
 
 ## Deployment
+
 I host this website on a shared hosting platform as a static HTML site. The website is automatically updated by Github actions when a new commit is pushed to the `release` branch. The Github runner executes `npm run build` and uploads the build files using SFTP to the hosting folder. This is configured in `.github/workflows/deploy-release.yml`
 
 There is an `.htaccess` file in the `public/` folder that allows the single `index.html` to successfully render for all the puzzle URLs that will otherwise break on refresh because these routes only exist as React Router paths.
@@ -56,6 +59,7 @@ There is an `.htaccess` file in the `public/` folder that allows the single `ind
 For the most part, if you want to test a user input given by the Advent of Code website or modify the website you can run `npm run dev` and start editing. If you are looking to refactor the code and are using inputs such as those available publicly on the Advent of Code website you can write a test for that day's solution and run `npm run test ${path-to-test-file}`.
 
 ## License
+
 Copyright (c) 2026 Shahruk Khan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

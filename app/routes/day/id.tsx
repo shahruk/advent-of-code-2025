@@ -41,7 +41,10 @@ export default function PuzzleDayPage() {
               <TabsContent key={`${id}:${index + 1}`} value={(index + 1).toString()}>
                 <div className="mb-4">
                   <Button size="sm" variant="outline" asChild>
-                    <a target="_blank" href={`https://github.com/shahruk/advent-of-code-2025/tree/release/app/puzzles/day-${id?.padStart(2, '0')}`}>
+                    <a
+                      target="_blank"
+                      href={`https://github.com/shahruk/advent-of-code-2025/tree/release/app/puzzles/day-${id?.padStart(2, "0")}`}
+                    >
                       Browse Github Puzzle Source Code
                     </a>
                   </Button>

@@ -25,7 +25,9 @@ export const SolutionArea = ({
       if (e instanceof Error) {
         setError(e.toString());
       } else {
-        setError("An unknown error occured that could not be transcribed. Check your browser console for additional details.");
+        setError(
+          "An unknown error occured that could not be transcribed. Check your browser console for additional details."
+        );
         console.error(e);
       }
     }
