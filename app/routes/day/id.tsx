@@ -40,7 +40,14 @@ export default function PuzzleDayPage() {
             {puzzleData.map((puzzle, index) => (
               <TabsContent key={`${id}:${index + 1}`} value={(index + 1).toString()}>
                 <div className="mb-4">
-                  <Button asChild>
+                  <Button size="sm" variant="outline" asChild>
+                    <a target="_blank" href={`https://github.com/shahruk/advent-of-code-2025/tree/release/app/puzzles/day-${id?.padStart(2, '0')}`}>
+                      Browse Github Puzzle Source Code
+                    </a>
+                  </Button>
+                </div>
+                <div className="mb-4">
+                  <Button size="sm" asChild>
                     <a target="_blank" href={puzzle.srcUrl} rel="noopener noreferrer">
                       Day {id} Puzzle Link
                     </a>
