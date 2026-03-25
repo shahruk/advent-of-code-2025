@@ -30,7 +30,6 @@ describe("Advent of Code - Day 8", () => {
   describe("getClosestPairs", () => {
     it("returns the correct value", () => {
       const pairs = getClosestPairs(shuffle(splitUserInputByCharacter(metadata[0].sampleInput))).reverse();
-      console.log("pairs", pairs);
       expect(pairs[0].slice(0, 2).sort((a, b) => parseInt(a as string) - parseInt(b as string))).toEqual([
         "162,817,812",
         "425,690,689",
@@ -54,18 +53,10 @@ describe("Advent of Code - Day 8", () => {
   describe("getCircuits", () => {
     it("returns the correct value", () => {
       const circuits = getCircuits(splitUserInputByCharacter(metadata[0].sampleInput), 10);
-      console.log("circuits", circuits);
       expect(circuits["162,817,812"].length).toEqual(4);
       expect(circuits["906,360,560"].length).toEqual(5);
       expect(circuits["52,470,668"].length).toEqual(2);
       expect(circuits["819,987,18"].length).toEqual(2);
-    });
-  });
-
-  describe("getFullCircuit", () => {
-    it("returns the correct value", () => {
-      const circuit = getFullCircuit(splitUserInputByCharacter(metadata[0].sampleInput));
-      console.log("full circuit", circuit);
     });
   });
 

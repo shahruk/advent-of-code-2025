@@ -25,14 +25,13 @@ jobs:
       - name: Build React
         run: npm run build
 
-      - name: Upload via SFTP to SiteGround
+      - name: Upload via SFTP to Production
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SFTP_HOST }}
           username: ${{ secrets.SFTP_USER }}
           key: ${{ secrets.SFTP_KEY }}
           port: ${{ secrets.SFTP_PORT }}
-          # passphrase: ${{ secrets.SFTP_KEY_PASSPHRASE }}
           source: "build/client/*"
           strip_components: 2
           target: "/home/customer/www/adventofcode2025.shahruk.com/public_html"
