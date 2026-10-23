@@ -23,7 +23,7 @@ const metadata: PuzzleMetadata[] = [
     srcUrl: `https://adventofcode.com/2025/day/7`,
     solution: partOne,
     prompt: `
---- Day 1: Laboratories ---
+--- Day 7: Laboratories ---
 `,
     sampleInput,
   },
